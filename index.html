@@ -1,249 +1,753 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const BASE_TEMP_MAIL = "https://api.internal.temp-mail.io/api/v3";
-const TEMP_HEADERS = {
-  "Content-Type": "application/json; charset=UTF-8",
-  "User-Agent": "okhttp/4.12.0",
-  "Host": "api.internal.temp-mail.io",
-};
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-vip-signature, x-copyright-check",
-};
-
-Deno.serve(async (req) => {
-  // Handle Preflight Request CORS
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
-    // 🔑 CHECK HEADER KEAMANAN
-    const KUNCI_HEADER_AMAN = req.headers.get("X-Copyright-Check");
-    if (KUNCI_HEADER_AMAN !== "titik-temu-cloud-secured-v25-key-auth") {
-      return new Response(
-        JSON.stringify({ success: false, error: "❌ Akses Ilegal!" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
-      );
-    }
-
-    // 🔑 INITIALIZE SUPABASE CLIENT
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Query ke tabel vault_sultan
-    const { data: vaultData, error: vaultError } = await supabase
-      .from("vault_sultan")
-      .select("SULTAN_MAIN")
-      .eq("id", 1)
-      .single();
-
-    if (vaultError || !vaultData || !vaultData.SULTAN_MAIN) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: `CRITICAL: Gagal membaca tabel 'vault_sultan'! Detail: ${vaultError?.message || "Data kosong"}`,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-      );
-    }
-
-    const MASTER_COMPRESDATA_BASE64 = vaultData.SULTAN_MAIN;
-
-    // Parse Payload Input
-    const { custom_name, password, silver, gold, exp, vip_key } = await req.json();
-
-    if (!custom_name || !password) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Nama Depan dan Password wajib diisi, Wak!" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
-    }
-
-    // ================= 2. GENERATE DISPOSABLE TEMP-MAIL =================
-    const domainRes = await fetch(`${BASE_TEMP_MAIL}/domains`, { headers: TEMP_HEADERS });
-    if (!domainRes.ok) throw new Error("Gagal mengambil active domains dari Temp-Mail API.");
-    
-    const domainData = await domainRes.json();
-    const domains = domainData.domains || [];
-    if (domains.length === 0) throw new Error("Tidak ada domain publik yang tersedia di Temp-Mail.");
-
-    const randomDomain = domains[Math.floor(Math.random() * domains.length)].name;
-    const randomBack = Math.random().toString(36).substring(2, 8);
-    const cleanCustomName = custom_name.replace(/[^a-zA-Z0-9]/g, "");
-    const username = `${cleanCustomName}_${randomBack}`;
-    const emailAddr = `${username}@${randomDomain}`;
-
-    const createEmailRes = await fetch(`${BASE_TEMP_MAIL}/email/new`, {
-      method: "POST",
-      headers: TEMP_HEADERS,
-      body: JSON.stringify({ domain: randomDomain, name: username }),
-    });
-    if (!createEmailRes.ok) throw new Error("Gagal mengalokasikan mailbox baru di Temp-Mail.");
-
-    // ================= 3. REGISTER HANDSHAKE KE CARX SERVER =================
-    const devId = crypto.randomUUID();
-    const uId = crypto.randomUUID().replace(/-/g, "").substring(0, 32);
-    const regUrl = "https://carx-id-prod.carx-online.com/api/auth/register";
-    
-    const regBody = new URLSearchParams({
-      deviceId: devId,
-      deviceUniqueId: uId,
-      username: emailAddr,
-      password: password,
-      project: "STREET",
-    });
-
-    const resReg = await fetch(regUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: regBody,
-    });
-
-    const regJson = await resReg.json();
-    const token = regJson?.d?.token || regJson?.token;
-    const realNick = regJson?.d?.carxId || regJson?.d?.username || username;
-
-    if (!token) {
-      throw new Error(`Register CarX Gagal Ditolak: ${JSON.stringify(regJson)}`);
-    }
-
-    // ================= 4. AUTOMATED OTP POLLING INTERCEPTOR =================
-    let otpCode: string | null = null;
-    const startTime = Date.now();
-    const timeoutMs = 120000; // Timeout Max 2 Menit
-
-    while (Date.now() - startTime < timeoutMs) {
-      await new Promise((r) => setTimeout(r, 4000)); // Sleep 4 Detik tiap polling
-
-      const msgRes = await fetch(`${BASE_TEMP_MAIL}/email/${emailAddr}/messages`, { headers: TEMP_HEADERS });
-      if (msgRes.ok) {
-        const messages = await msgRes.json();
-        if (messages && messages.length > 0) {
-          for (const msg of messages) {
-            const rawContent = `${msg.body || ""} ${msg.body_html || ""}`;
-            const cleanText = rawContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
-
-            // Multi-Tier Regex Matcher
-            const match1 = cleanText.match(/Your unique confirmation code[\s:]*([a-zA-Z0-9]{4,8})/i);
-            const match2 = cleanText.match(/(?:confirmation code|code|otp)[\s:]*([a-zA-Z0-9]{4,8})/i);
-            const match3 = cleanText.match(/\b([a-f0-9]{6})\b/i);
-
-            otpCode = match1?.[1] || match2?.[1] || match3?.[1] || null;
-            if (otpCode) break;
-          }
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏎️ CarX Tuning & Register</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
         }
-      }
-      if (otpCode) break;
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header { text-align: center; padding: 20px 0 30px; }
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header p { color: #888; margin-top: 5px; }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .card-title {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .card-title.pink { color: #f093fb; }
+        .card-title.gold { color: #f6d365; }
+        .card-title.blue { color: #4facfe; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-size: 0.75em;
+            color: #aaa;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .form-group input, .form-group select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.07);
+            color: #fff;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #f093fb;
+            box-shadow: 0 0 20px rgba(240, 147, 251, 0.15);
+        }
+        .form-group input::placeholder { color: #666; }
+
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        .btn-block { width: 100%; }
+        .btn-primary { background: linear-gradient(45deg, #f093fb, #f5576c); color: #fff; }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3); }
+        .btn-success { background: linear-gradient(45deg, #4facfe, #00f2fe); color: #fff; }
+        .btn-success:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(79, 172, 254, 0.3); }
+        .btn-warning { background: linear-gradient(45deg, #f6d365, #fda085); color: #333; }
+        .btn-warning:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(253, 160, 133, 0.3); }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+        .btn-outline:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
+
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .hidden { display: none !important; }
+        .mt-10 { margin-top: 10px; }
+        .text-muted { color: #888; font-size: 0.85em; }
+
+        .tab-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 8px 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .tab-btn.active {
+            border-color: #f093fb;
+            color: #f093fb;
+            background: rgba(240,147,251,0.1);
+        }
+
+        .car-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        .car-item {
+            background: rgba(255,255,255,0.05);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+        .car-item:hover { background: rgba(255,255,255,0.1); }
+        .car-item.selected { border-color: #f093fb; background: rgba(240, 147, 251, 0.15); }
+        .car-item .status { font-size: 0.7em; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.1); }
+        .car-item .status.tuned { background: #00f2fe; color: #000; }
+
+        .status-box {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow: auto;
+        }
+        .status-box.success { background: rgba(0,200,83,0.12); border: 1px solid rgba(0,200,83,0.3); }
+        .status-box.error { background: rgba(213,0,0,0.12); border: 1px solid rgba(213,0,0,0.3); }
+        .status-box.info { background: rgba(41,121,255,0.12); border: 1px solid rgba(41,121,255,0.3); }
+        .status-box pre { margin: 0; font-size: 12px; color: #ccc; }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            background: #333;
+            color: #fff;
+            transform: translateY(120px);
+            opacity: 0;
+            transition: all 0.5s;
+            z-index: 1000;
+            max-width: 400px;
+            font-size: 14px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: #00c853; }
+        .toast.error { background: #d50000; }
+        .toast.info { background: #2979ff; }
+
+        .loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🏎️ CarX Tuning & Register</h1>
+        <p>🔧 Login, Tuning, atau Auto Register — semua lewat satu dashboard</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB NAVIGATION -->
+    <!-- ============================================================ -->
+    <div class="tab-group">
+        <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">🔐 Login</button>
+        <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">🆕 Register</button>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 1: LOGIN -->
+    <!-- ============================================================ -->
+    <div class="card" id="loginSection">
+        <div class="card-title pink">🔐 Login Akun</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>📧 Email</label>
+                <input type="email" id="loginEmail" placeholder="email@gmail.com">
+            </div>
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="loginPassword" placeholder="Password">
+            </div>
+            <div class="form-group">
+                <label>🎫 VIP Key</label>
+                <input type="text" id="vipKey" placeholder="VIP Key (opsional)" value="TEST_KEY_123">
+            </div>
+        </div>
+        <button class="btn btn-primary btn-block" id="loginBtn" onclick="handleLogin()">🚀 Login & Ambil Data</button>
+        <div id="loginStatus" class="hidden status-box"></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 2: REGISTER -->
+    <!-- ============================================================ -->
+    <div class="card hidden" id="registerSection">
+        <div class="card-title gold">🆕 Auto Register Akun Baru</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:15px;border-left:3px solid #f6d365;">
+            <p style="font-size:0.85em;color:#aaa;">
+                ⚡ <strong>Auto-generate</strong> email temporary, langsung verifikasi OTP, dan inject data Sultan!<br>
+                💰 Silver: 9,999,999 | Gold: 999,999 | EXP: 999,999
+            </p>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>👤 Nama (untuk email)</label>
+                <input type="text" id="regName" placeholder="Contoh: JohnDoe" value="User">
+            </div>
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="regPassword" placeholder="Password" value="Rahasia123">
+            </div>
+            <div class="form-group">
+                <label>🎫 VIP Key</label>
+                <input type="text" id="regVipKey" placeholder="VIP Key" value="TEST_KEY_123">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>🪙 Silver (opsional)</label>
+                <input type="number" id="regSilver" value="9999999" min="0">
+            </div>
+            <div class="form-group">
+                <label>💰 Gold (opsional)</label>
+                <input type="number" id="regGold" value="999999" min="0">
+            </div>
+            <div class="form-group">
+                <label>⭐ EXP (opsional)</label>
+                <input type="number" id="regExp" value="999999" min="0">
+            </div>
+        </div>
+        <button class="btn btn-warning btn-block" id="registerBtn" onclick="handleRegister()">🚀 Auto Register & Inject</button>
+        <div id="registerStatus" class="hidden status-box"></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- CAR LIST & TUNING (muncul setelah login) -->
+    <!-- ============================================================ -->
+    <div class="card hidden" id="carListSection">
+        <div class="card-title blue">🏎️ Garasi Mobil <span class="text-muted" id="totalCarsLabel"></span></div>
+        <div id="carListContainer" class="car-list"></div>
+        <div class="mt-10 text-muted" style="display:flex;gap:15px;flex-wrap:wrap;">
+            <span>Session: <strong id="sessionIdDisplay">-</strong></span>
+            <span>Nick: <strong id="nickDisplay">-</strong></span>
+        </div>
+    </div>
+
+    <!-- TUNING SECTION -->
+    <div class="card hidden" id="tuningSection">
+        <div class="card-title pink">🔧 Tuning Config</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>🚗 Mobil Terpilih</label>
+                <input type="text" id="selectedCar" readonly placeholder="Pilih mobil dulu" style="background:rgba(255,255,255,0.05);">
+            </div>
+        </div>
+
+        <!-- ENGINE -->
+        <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #f5576c;">
+            <div style="color:#f5576c;font-weight:600;font-size:0.9em;margin-bottom:8px;">⚙️ Engine</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ECU</label>
+                    <select id="ecuId">
+                        <option value="engine_ecu_stock">Stock</option>
+                        <option value="engine_ecu_sport">Sport</option>
+                        <option value="engine_ecu_race" selected>Race</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rev Limit</label>
+                    <input type="number" id="revLimit" value="8500" min="6000" max="12000">
+                </div>
+                <div class="form-group">
+                    <label>Engine Power</label>
+                    <input type="number" id="enginePower" value="180" min="50" max="500">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fuel System</label>
+                    <select id="fuelSystemId">
+                        <option value="engine_fuel_system_stock">Stock</option>
+                        <option value="engine_fuel_system_sport">Sport</option>
+                        <option value="engine_fuel_system_race" selected>Race</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fuel Flow</label>
+                    <input type="number" id="fuelFlow" value="150" min="50" max="300">
+                </div>
+            </div>
+        </div>
+
+        <!-- SUSPENSION & BRAKES -->
+        <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #f6d365;">
+            <div style="color:#f6d365;font-weight:600;font-size:0.9em;margin-bottom:8px;">🔧 Suspension & Brakes</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Front Camber</label>
+                    <input type="number" id="frontCamber" value="-3.0" step="0.1" min="-5" max="0">
+                </div>
+                <div class="form-group">
+                    <label>Front Toe</label>
+                    <input type="number" id="frontToe" value="0.5" step="0.1" min="-2" max="2">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Brakes</label>
+                    <select id="brakesId">
+                        <option value="suspension_brakes_stock">Stock</option>
+                        <option value="suspension_brakes_sport">Sport</option>
+                        <option value="suspension_brakes_race" selected>Race</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Brake Power</label>
+                    <input type="number" id="brakePower" value="150" min="50" max="300">
+                </div>
+            </div>
+        </div>
+
+        <!-- WHEELS -->
+        <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #00f2fe;">
+            <div style="color:#00f2fe;font-weight:600;font-size:0.9em;margin-bottom:8px;">🛞 Wheels</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Front Rim</label>
+                    <select id="frontRimId">
+                        <option value="wheel_rim_front_18">18"</option>
+                        <option value="wheel_rim_front_19">19"</option>
+                        <option value="wheel_rim_front_20">20"</option>
+                        <option value="wheel_rim_front_22" selected>22"</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rear Rim</label>
+                    <select id="rearRimId">
+                        <option value="wheel_rim_rear_18">18"</option>
+                        <option value="wheel_rim_rear_19">19"</option>
+                        <option value="wheel_rim_rear_20">20"</option>
+                        <option value="wheel_rim_rear_22" selected>22"</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISUAL: BODY LEPAS -->
+        <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #ff6b9d;">
+            <div style="color:#ff6b9d;font-weight:600;font-size:0.9em;margin-bottom:8px;">🎨 Visual - Body Lepas</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Body Kit ID</label>
+                    <input type="text" id="bodyKitId" placeholder="contoh: lexusrcf_cbw_bkit" value="lexusrcf_cbw_bkit">
+                </div>
+            </div>
+            <div style="margin:5px 0;font-size:0.8em;color:#ff6b9d;">Centang bagian yang mau dilepas:</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <label style="font-size:0.8em;color:#ccc;"><input type="checkbox" id="removeBonnet"> Bonnet</label>
+                <label style="font-size:0.8em;color:#ccc;"><input type="checkbox" id="removeTrunk"> Trunk</label>
+                <label style="font-size:0.8em;color:#ccc;"><input type="checkbox" id="removeDoors"> Doors</label>
+                <label style="font-size:0.8em;color:#ccc;"><input type="checkbox" id="removeFrontBumper"> Front Bumper</label>
+                <label style="font-size:0.8em;color:#ccc;"><input type="checkbox" id="removeRearBumper"> Rear Bumper</label>
+                <label style="font-size:0.8em;color:#ccc;"><input type="checkbox" id="removeSkirts"> Skirts</label>
+                <label style="font-size:0.8em;color:#ccc;"><input type="checkbox" id="removeSpoiler"> Spoiler</label>
+                <label style="font-size:0.8em;color:#ccc;"><input type="checkbox" id="removeRoof"> Roof</label>
+                <label style="font-size:0.8em;color:#ccc;"><input type="checkbox" id="removeMirrors"> Mirrors</label>
+            </div>
+        </div>
+
+        <!-- RESOURCES -->
+        <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #00c853;">
+            <div style="color:#00c853;font-weight:600;font-size:0.9em;margin-bottom:8px;">⛽ Resources</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Bensin (0-40)</label>
+                    <input type="number" id="gasolineAmount" value="40" min="0" max="40">
+                </div>
+                <div class="form-group">
+                    <label>Nitro (0-20)</label>
+                    <input type="number" id="nitroAmount" value="20" min="0" max="20">
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="btn-group">
+            <button class="btn btn-success" id="tuneBtn" onclick="handleTune()">🔧 Apply Tuning</button>
+            <button class="btn btn-warning" id="resetBtn" onclick="handleReset()">🔄 Reset</button>
+            <button class="btn btn-outline" id="structBtn" onclick="handleGetStructure()">🔍 Cek Struktur</button>
+        </div>
+        <div id="tuningStatus" class="hidden status-box"></div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ================================================================
+// 🔧 KONFIGURASI - PAKAI URL BACKEND KAMU
+// ================================================================
+const BACKEND_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/dasbor_tuning';
+
+let sessionId = null;
+let selectedCarId = null;
+let carList = [];
+
+// ================================================================
+// 🛠️ HELPER
+// ================================================================
+function getVal(id) { return document.getElementById(id).value; }
+function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function getBool(id) { return document.getElementById(id).checked; }
+
+function showToast(msg, type = 'info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type}`;
+    setTimeout(() => t.classList.add('show'), 100);
+    setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function showStatus(id, msg, type = 'info') {
+    const el = document.getElementById(id);
+    el.classList.remove('hidden');
+    el.className = `status-box ${type}`;
+    el.innerHTML = msg;
+}
+
+function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (loading) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading"></span> Processing...';
+    } else {
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.original || 'Submit';
     }
+}
 
-    if (!otpCode) throw new Error("OTP Timeout: Kode verifikasi tidak ditemukan di Inbox Temp-Mail.");
+function switchTab(tab) {
+    document.getElementById('loginSection').classList.toggle('hidden', tab !== 'login');
+    document.getElementById('registerSection').classList.toggle('hidden', tab !== 'register');
+    document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+}
 
-    // ================= 5. VERIFY AKUN CARX =================
-    const verifyUrl = "https://carx-id-prod.carx-online.com/api/auth/verify";
-    const resVerify = await fetch(verifyUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "UnityPlayer/6000.0.64f1 (UnityWebRequest/1.0, libcurl/8.10.1-DEV)",
-        "X-Unity-Version": "6000.0.64f1",
-      },
-      body: new URLSearchParams({ code: otpCode }),
-    });
+// ================================================================
+// 📡 API CALL KE BACKEND
+// ================================================================
+async function callBackend(step, data) {
+    const payload = {
+        step: step,
+        vip_key: getVal('vipKey') || 'TEST_KEY_123',
+        hwid: 'WEB_TESTER',
+        ...data
+    };
 
-    if (!resVerify.ok) throw new Error("Verifikasi OTP ke CarX Auth Server gagal.");
-
-    // ================= 6. UNCOMPRESS GZIP, PATCH JSON & RE-COMPRESS =================
-    const cleanVaultBase64 = MASTER_COMPRESDATA_BASE64.trim().replace(/\s/g, "");
-    const rawBin = Uint8Array.from(atob(cleanVaultBase64), (c) => c.charCodeAt(0));
-    
-    // Deteksi Magic Bytes Marker Header GZIP (0x1f, 0x8b)
-    let gzStart = -1;
-    for (let i = 0; i < rawBin.length - 1; i++) {
-      if (rawBin[i] === 0x1f && rawBin[i + 1] === 0x8b) {
-        gzStart = i;
-        break;
-      }
-    }
-
-    if (gzStart === -1) {
-      throw new Error("Format master biner di tabel 'vault_sultan' invalid: Magic Bytes GZIP (0x1f8b) tidak ditemukan!");
-    }
-
-    const headerAsli = rawBin.slice(0, gzStart);
-    const gzBody = rawBin.slice(gzStart);
-
-    // Decompress Body Payload
-    const decompressedStream = new Response(gzBody).body!.pipeThrough(new DecompressionStream("gzip"));
-    const profileJsonText = await new Response(decompressedStream).text();
-    const profile = JSON.parse(profileJsonText);
-
-    // Modifikasi Resource Profile
-    profile.nickname = realNick;
-    profile.resources = profile.resources || {};
-    profile.resources.soft = { amount: Number(silver || 9999999) };
-    profile.resources.hard = { amount: Number(gold || 999999) };
-    profile.resources.experience = { amount: Number(exp || 999999) };
-    profile.last_save_time = Math.floor(Date.now() / 1000);
-
-    // Re-Compress Body Payload ke GZIP
-    const jsonBytes = new TextEncoder().encode(JSON.stringify(profile));
-    const compressedStream = new Response(jsonBytes).body!.pipeThrough(new CompressionStream("gzip"));
-    const newGzBuffer = await new Response(compressedStream).arrayBuffer();
-    const newGzArray = new Uint8Array(newGzBuffer);
-
-    // Re-combine Header Asli + New GZIP Payload
-    const finalPayloadArray = new Uint8Array(headerAsli.length + newGzArray.length);
-    finalPayloadArray.set(headerAsli, 0);
-    finalPayloadArray.set(newGzArray, headerAsli.length);
-
-    // Encode Biner Akhir ke Base64 String
-    let binaryStr = "";
-    for (let i = 0; i < finalPayloadArray.length; i++) {
-      binaryStr += String.fromCharCode(finalPayloadArray[i]);
-    }
-    const finalPayloadBase64 = btoa(binaryStr);
-
-    // ================= 7. INJECT SAVE DATA KE CARX PROFILE SERVER =================
-    const resInject = await fetch("https://street-prod.carx-online.com/str/v1/client/profiles", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        "User-Agent": "UnityPlayer/6000.0.64f1 (UnityWebRequest/1.0, libcurl/8.10.1-DEV)",
-      },
-      body: JSON.stringify({ compressed_data: finalPayloadBase64 }),
-    });
-
-    if (!resInject.ok) {
-      throw new Error(`Profile Injection Rejected: ${await resInject.text()}`);
-    }
-
-    // ================= 8. RETURN RESPONSE KE CLIENT =================
-    return new Response(
-      JSON.stringify({
-        success: true,
-        data: {
-          email: emailAddr,
-          password: password,
-          username: realNick,
-          silver: Number(silver || 9999999),
-          gold: Number(gold || 999999),
-          exp: Number(exp || 999999),
-          token: token,
-          otp: otpCode,
+    const response = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth'
         },
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-    );
+        body: JSON.stringify(payload)
+    });
 
-  } catch (err: any) {
-    return new Response(
-      JSON.stringify({ success: false, error: err.message || "Internal Cloud Execution Error" }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-    );
-  }
-});
+    return await response.json();
+}
+
+// ================================================================
+// 🆕 REGISTER
+// ================================================================
+async function handleRegister() {
+    const name = getVal('regName');
+    const password = getVal('regPassword');
+    const vipKey = getVal('regVipKey');
+    const silver = getNum('regSilver');
+    const gold = getNum('regGold');
+    const exp = getNum('regExp');
+
+    if (!name || !password) {
+        showToast('⚠️ Nama dan Password wajib diisi!', 'error');
+        return;
+    }
+
+    showStatus('registerStatus', '⏳ Proses register & inject...', 'info');
+    setLoading('registerBtn', true);
+
+    try {
+        const result = await callBackend('register', {
+            custom_name: name,
+            password: password,
+            silver: silver,
+            gold: gold,
+            exp: exp,
+            vip_key: vipKey
+        });
+
+        if (result.success) {
+            const data = result.data;
+            showStatus('registerStatus', `
+✅ <strong>REGISTER SUKSES!</strong>
+📧 Email: ${data.email}
+🔑 Password: ${data.password}
+👤 Username: ${data.username}
+🪙 Silver: ${data.silver}
+💰 Gold: ${data.gold}
+⭐ EXP: ${data.exp}
+📱 Token: ${data.token.substring(0, 30)}...
+🔢 OTP: ${data.otp}
+
+💡 Silakan login dengan akun di atas!
+            `, 'success');
+            showToast('✅ Register sukses! Silakan login.', 'success');
+            
+            // Auto fill login form
+            document.getElementById('loginEmail').value = data.email;
+            document.getElementById('loginPassword').value = data.password;
+            document.getElementById('vipKey').value = vipKey || 'TEST_KEY_123';
+            
+            switchTab('login');
+        } else {
+            showStatus('registerStatus', `❌ ${result.error || 'Register gagal!'}`, 'error');
+            showToast('❌ Register gagal!', 'error');
+        }
+    } catch (err) {
+        showStatus('registerStatus', `❌ Error: ${err.message}`, 'error');
+        showToast('❌ Error koneksi!', 'error');
+    }
+    setLoading('registerBtn', false);
+}
+
+// ================================================================
+// 🚀 LOGIN
+// ================================================================
+async function handleLogin() {
+    const email = getVal('loginEmail');
+    const pass = getVal('loginPassword');
+    
+    if (!email || !pass) {
+        showToast('⚠️ Email dan Password wajib diisi!', 'error');
+        return;
+    }
+
+    showStatus('loginStatus', '⏳ Login...', 'info');
+    setLoading('loginBtn', true);
+
+    try {
+        const result = await callBackend('login_and_get_profile', {
+            user: email,
+            pass: pass
+        });
+
+        if (result.status === 'success') {
+            sessionId = result.session_id;
+            carList = result.cars || [];
+            
+            showStatus('loginStatus', `
+✅ <strong>Login SUKSES!</strong>
+👤 Nickname: ${result.nickname || '-'}
+🏎️ Total Mobil: ${result.total_cars || 0}
+📱 Session: ${sessionId}
+            `, 'success');
+
+            document.getElementById('carListSection').classList.remove('hidden');
+            document.getElementById('tuningSection').classList.remove('hidden');
+            document.getElementById('sessionIdDisplay').textContent = sessionId;
+            document.getElementById('nickDisplay').textContent = result.nickname || '-';
+            document.getElementById('totalCarsLabel').textContent = `(${result.total_cars || 0} mobil)`;
+
+            renderCarList();
+            showToast('✅ Login sukses!', 'success');
+        } else {
+            showStatus('loginStatus', `❌ ${result.error || 'Login gagal!'}`, 'error');
+            showToast('❌ Login gagal!', 'error');
+        }
+    } catch (err) {
+        showStatus('loginStatus', `❌ Error: ${err.message}`, 'error');
+        showToast('❌ Error koneksi!', 'error');
+    }
+    setLoading('loginBtn', false);
+}
+
+// ================================================================
+// 🏎️ RENDER CAR LIST
+// ================================================================
+function renderCarList() {
+    const container = document.getElementById('carListContainer');
+    container.innerHTML = '';
+
+    if (!carList || carList.length === 0) {
+        container.innerHTML = '<div class="text-muted">Tidak ada mobil di garasi</div>';
+        return;
+    }
+
+    carList.forEach(car => {
+        const div = document.createElement('div');
+        div.className = `car-item${selectedCarId === car.id ? ' selected' : ''}`;
+        div.innerHTML = `
+            <span>${car.name}</span>
+            <span class="status${car.has_tuning ? ' tuned' : ''}">${car.has_tuning ? '✅' : '❌'}</span>
+        `;
+        div.onclick = () => selectCar(car.id);
+        container.appendChild(div);
+    });
+
+    if (!selectedCarId && carList.length > 0) {
+        selectCar(carList[0].id);
+    }
+}
+
+function selectCar(carId) {
+    selectedCarId = carId;
+    const car = carList.find(c => c.id === carId);
+    if (car) {
+        document.getElementById('selectedCar').value = `${car.name} (ID: ${car.id})`;
+        renderCarList();
+        showToast(`🚗 ${car.name} dipilih`, 'info');
+    }
+}
+
+// ================================================================
+// 🔧 BUILD TUNE CONFIG
+// ================================================================
+function buildTuneConfig() {
+    const removeParts = [];
+    if (getBool('removeBonnet')) removeParts.push('styling_bonnet');
+    if (getBool('removeTrunk')) removeParts.push('styling_trunk');
+    if (getBool('removeDoors')) removeParts.push('styling_doors');
+    if (getBool('removeFrontBumper')) removeParts.push('styling_bumper_front');
+    if (getBool('removeRearBumper')) removeParts.push('styling_bumper_rear');
+    if (getBool('removeSkirts')) removeParts.push('styling_skirts');
+    if (getBool('removeSpoiler')) removeParts.push('styling_spoiler');
+    if (getBool('removeRoof')) removeParts.push('styling_roof');
+    if (getBool('removeMirrors')) removeParts.push('styling_mirrors');
+
+    return {
+        engine: {
+            ecu: {
+                id: getVal('ecuId'),
+                stat_tunes: {
+                    engine_rev_limit: getNum('revLimit'),
+                    engine_power: getNum('enginePower')
+                }
+            },
+            fuel_system: {
+                id: getVal('fuelSystemId'),
+                stat_tunes: { fuel_flow: getNum('fuelFlow') }
+            }
+        },
+        suspension: {
+            front_arms: {
+                stat_tunes: {
+                    suspension_front_camber: { value: getNum('frontCamber') },
+                    suspension_front_toe: { value: getNum('frontToe') }
+                }
+            },
+            brakes: {
+                id: getVal('brakesId'),
+                stat_tunes: { brake_power: getNum('brakePower') }
+            }
+        },
+        wheels: {
+            front_rim: { id: getVal('frontRimId') },
+            rear_rim: { id: getVal('rearRimId') }
+        },
+        resources: {
+            gasoline: { amount: getNum('gasolineAmount'), max: 40 },
+            nitro: { amount: getNum('nitroAmount'), max: 20 }
+        },
+        visual: {
+            body_kit: getVal('bodyKitId') || undefined,
+            remove_body_parts: removeParts
+        }
+    };
+}
+
+// ================================================================
+// 🔧 TUNE
+// ================================================================
+async function handleTune() {
+    if (!sessionId) { showToast('⚠️ Login dulu!', 'error'); return; }
+    if (!selectedCarId) { showToast('⚠️ Pilih mobil dulu!', 'error'); return; }
+
+    const tuneConfig = buildTuneConfig();
+    showStatus('tuningStatus', '⏳ Proses tuning...', 'info');
+    setLoading('tuneBtn', true);
+
+    try {
+        const result = await callBackend('tune_car', {
+            session_id: sessionId,
+            car_id: selectedCarId,
+            tune_config: tuneConfig
+        });
+
+        if (result.status === 'success') {
+            showStatus('tuningStatus', `✅ ${result.message || 'Tuning sukses!'}`, 'success');
+            showToast('✅ Tuning berhasil!', 'success');
+            setTimeout(() => handleLogin(), 1500);
+        } else {
+            showStatus('tuningStatus', `❌ ${result.error || 'Tuning gagal!'}`, 'error');
+            showToast('❌ Tuning gagal!', 'error');
+        }
+    } catch (err) {
+        showStatus('tuningStatus', `❌ Error: ${err.message}`, 'error');
+        showToast('❌ Error koneksi!
