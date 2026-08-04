@@ -259,8 +259,12 @@
         <div class="card-title gold">🆕 Auto Register Akun Baru</div>
         <div class="form-row">
             <div class="form-group">
+                <label>📧 Email Baru</label>
+                <input type="email" id="regEmail" placeholder="emailbaru@gmail.com">
+            </div>
+            <div class="form-group">
                 <label>🔑 Password Baru</label>
-                <input type="password" id="regPassword" placeholder="Password" value="Rahasia123">
+                <input type="password" id="regPassword" placeholder="Password">
             </div>
             <div class="form-group">
                 <label>🪙 Silver</label>
@@ -409,7 +413,7 @@
 // ================================================================
 // 🔧 URL GATEWAY SUPABASE
 // ================================================================
-const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/dasbor_tuning';
+const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/tuning';
 
 let sessionId = null;
 let selectedCarObject = null;
@@ -477,12 +481,13 @@ async function apiPost(payloadData) {
 // 🆕 REGISTER AKUN
 // ================================================================
 async function handleRegister() {
+    const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
     const silver = document.getElementById('regSilver').value;
     const gold = document.getElementById('regGold').value;
 
-    if (!password) {
-        showToast('⚠️ Password wajib diisi!', 'error');
+    if (!email || !password) {
+        showToast('⚠️ Email dan Password wajib diisi!', 'error');
         return;
     }
 
@@ -491,25 +496,18 @@ async function handleRegister() {
 
     const result = await apiPost({
         step: 'register',
+        email: email,
         password: password,
         silver: Number(silver),
         gold: Number(gold)
     });
 
-    if (result.status === true) {
-        const acc = result.data;
-        showStatus('registerStatus', `
-✅ REGISTER BERHASIL!
-📧 Email: ${acc.email}
-🔑 Password: ${acc.password}
-👤 Nick: ${acc.carx_id}
-
-💡 Email & password otomatis disalin ke menu Login!
-        `, 'success');
+    if (result.status === 'success') {
+        showStatus('registerStatus', `✅ REGISTER BERHASIL!\n📧 Email: ${email}\n🔑 Password: ${password}\n💬 ${result.message}`, 'success');
         showToast('🎉 Akun baru berhasil dibuat!', 'success');
         
-        document.getElementById('loginEmail').value = acc.email;
-        document.getElementById('loginPassword').value = acc.password;
+        document.getElementById('loginEmail').value = email;
+        document.getElementById('loginPassword').value = password;
         setTimeout(() => switchTab('login'), 2500);
     } else {
         showStatus('registerStatus', `❌ ${result.error || 'Gagal register!'}`, 'error');
@@ -519,7 +517,7 @@ async function handleRegister() {
 }
 
 // ================================================================
-// 🚀 LOGIN & AMBIL GARASI
+// 🚀 LOGIN & AMBIL GARASI (DISINKRONKAN)
 // ================================================================
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
@@ -530,40 +528,29 @@ async function handleLogin() {
         return;
     }
 
-    showStatus('loginStatus', '⏳ Menghubungkan ke server game...', 'info');
+    showStatus('loginStatus', '⏳ Menghubungkan ke server game & mengambil garasi...', 'info');
     setLoading('loginBtn', true);
 
     const loginResult = await apiPost({
-        step: 'login',
+        step: 'login_and_get_cars',
         user: email,
         pass: pass
     });
 
     if (loginResult.status === 'success') {
         sessionId = loginResult.session_id;
-        
-        const profileJson = await apiPost({
-            step: 'login_and_get_profile',
-            session_id: sessionId
-        });
-        
-        if (profileJson.status === 'success') {
-            carListRaw = profileJson.cars_raw || [];
+        carListRaw = loginResult.cars || [];
 
-            showStatus('loginStatus', `✅ LOGIN BERHASIL! Session: ${sessionId}`, 'success');
-            document.getElementById('carListSection').classList.remove('hidden');
-            document.getElementById('sessionIdDisplay').textContent = sessionId;
-            document.getElementById('totalCarsLabel').textContent = `(${carListRaw.length} Kendaraan)`;
+        showStatus('loginStatus', `✅ LOGIN BERHASIL! Session: ${sessionId}`, 'success');
+        document.getElementById('carListSection').classList.remove('hidden');
+        document.getElementById('sessionIdDisplay').textContent = sessionId;
+        document.getElementById('totalCarsLabel').textContent = `(${carListRaw.length} Kendaraan)`;
 
-            renderCarList(carListRaw);
-            showToast('✅ Garasi berhasil dimuat!', 'success');
-        } else {
-            showStatus('loginStatus', `❌ ${profileJson.error || 'Gagal mengambil profil garasi!'}`, 'error');
-            showToast('❌ Gagal muat profil!', 'error');
-        }
+        renderCarList(carListRaw);
+        showToast(`✅ Garasi berhasil dimuat! (${carListRaw.length} mobil)`, 'success');
     } else {
-        showStatus('loginStatus', `❌ ${loginResult.error || 'Login gagal!'}`, 'error');
-        showToast('❌ Login gagal!', 'error');
+        showStatus('loginStatus', `❌ ${loginResult.error || 'Login atau ambil garasi gagal!'}`, 'error');
+        showToast('❌ Gagal login akun!', 'error');
     }
     setLoading('loginBtn', false);
 }
@@ -580,7 +567,7 @@ function renderCarList(cars) {
     cars.forEach((car, index) => {
         const div = document.createElement('div');
         div.className = `car-item`;
-        div.innerHTML = `<span>🏎️ ${car.__desc_id || 'Car ' + index} (ID: ${car.id})</span>`;
+        div.innerHTML = `<span>${car.display || car.__desc_id || 'Car ' + index}</span>`;
         div.onclick = () => selectCar(car);
         container.appendChild(div);
     });
@@ -590,22 +577,22 @@ function renderCarList(cars) {
 
 function selectCar(carObj) {
     selectedCarObject = carObj;
-    document.getElementById('selectedCar').value = `${carObj.__desc_id} [Slot ID: ${carObj.id}]`;
+    document.getElementById('selectedCar').value = `${carObj.__desc_id || 'Car'} [Slot ID: ${carObj.id}]`;
     document.getElementById('tuningSection').classList.remove('hidden');
-    showToast(`🚗 Mobil ${carObj.__desc_id} terpilih`, 'info');
+    showToast(`🚗 Mobil terpilih`, 'info');
 }
 
 // ================================================================
-// ⚙️ TERAPKAN MODULAR TUNING (5 MENU - FIXED STEP & CAR_ID)
+// ⚙️ TERAPKAN MODULAR TUNING
 // ================================================================
 async function handleApplyModularTune() {
     if (!sessionId) { showToast('⚠️ Sesi habis, login ulang!', 'error'); return; }
     if (!selectedCarObject) { showToast('⚠️ Pilih mobil terlebih dahulu!', 'error'); return; }
 
     const payloadData = {
-        step: 'tune_existing_car',          // 👈 STEP DISAMAKAN DENGAN BACKEND
+        step: 'tune_existing_car',
         session_id: sessionId,
-        car_id: selectedCarObject.id,       // 👈 KIRIM SLOT ID GARASI MOBIL YANG DIPILIH
+        car_id: selectedCarObject.id,
         
         body_mass: document.getElementById('bodyMass').value,
         body_front_downforce: document.getElementById('aeroFront').value,
