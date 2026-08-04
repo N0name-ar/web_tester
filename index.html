@@ -231,7 +231,7 @@
         <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Register & 5 Menu Modular Tuning</p>
     </div>
 
-    <!-- TAB NAVIGATION -->
+    <!-- TAB NAVIGATION (DITAMBAHKAN TOMBOL REGISTERNYA) -->
     <div class="tab-group">
         <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">🔐 Login Sesi</button>
         <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">🆕 Register Akun</button>
@@ -254,7 +254,7 @@
         <div id="loginStatus" class="hidden status-box"></div>
     </div>
 
-    <!-- TAB REGISTER -->
+    <!-- TAB REGISTER (CARD REGISTER) -->
     <div class="card hidden" id="registerSection">
         <div class="card-title gold">🆕 Auto Register Akun Baru</div>
         <div class="form-row">
@@ -406,9 +406,6 @@
 <div id="toast" class="toast"></div>
 
 <script>
-// ================================================================
-// 🔧 KONFIGURASI GATEWAY URL LU
-// ================================================================
 const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/gateway_tuning';
 
 let sessionId = null;
@@ -448,9 +445,7 @@ function switchTab(tab) {
     document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
 }
 
-// ================================================================
-// 🆕 REGISTER AKUN
-// ================================================================
+// REGISTER AKUN
 async function handleRegister() {
     const password = document.getElementById('regPassword').value;
     const silver = document.getElementById('regSilver').value;
@@ -489,14 +484,13 @@ async function handleRegister() {
 🔑 Password: ${acc.password}
 👤 Nick: ${acc.carx_id}
 
-💡 Email dan password otomatis disalin ke menu Login!
+💡 Email & password otomatis disalin ke menu Login!
             `, 'success');
             showToast('🎉 Akun baru berhasil dibuat!', 'success');
             
-            // Auto isi ke form login & pindah tab
             document.getElementById('loginEmail').value = acc.email;
             document.getElementById('loginPassword').value = acc.password;
-            setTimeout(() => switchTab('login'), 2000);
+            setTimeout(() => switchTab('login'), 2500);
         } else {
             showStatus('registerStatus', `❌ ${result.error || 'Gagal register!'}`, 'error');
             showToast('❌ Register gagal!', 'error');
@@ -508,9 +502,7 @@ async function handleRegister() {
     setLoading('registerBtn', false);
 }
 
-// ================================================================
-// 🚀 LOGIN & AMBIL GARASI
-// ================================================================
+// LOGIN & AMBIL GARASI
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPassword').value;
@@ -602,9 +594,7 @@ function selectCar(carObj) {
     showToast(`🚗 Mobil ${carObj.__desc_id} terpilih`, 'info');
 }
 
-// ================================================================
-// ⚙️ TERAPKAN MODULAR TUNING (5 MENU)
-// ================================================================
+// TERAPKAN MODULAR TUNING (5 MENU)
 async function handleApplyModularTune() {
     if (!sessionId) { showToast('⚠️ Sesi habis, login ulang!', 'error'); return; }
     if (!selectedCarObject) { showToast('⚠️ Pilih mobil terlebih dahulu!', 'error'); return; }
