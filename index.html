@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏎️ CarX Tuning Tester</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .card-title {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #f093fb;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-size: 0.8em;
+            color: #aaa;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .form-group input, .form-group select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.07);
+            color: #fff;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #f093fb;
+            box-shadow: 0 0 20px rgba(240, 147, 251, 0.15);
+        }
+        .form-group input[type="number"] { -moz-appearance: textfield; }
+        .form-group input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-primary { background: linear-gradient(45deg, #f093fb, #f5576c); color: #fff; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3); }
+        .btn-success { background: linear-gradient(45deg, #4facfe, #00f2fe); color: #fff; }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(79, 172, 254, 0.3); }
+        .btn-danger { background: linear-gradient(45deg, #f093fb, #f5576c); color: #fff; }
+        .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3); }
+        .btn-warning { background: linear-gradient(45deg, #f6d365, #fda085); color: #333; }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(253, 160, 133, 0.3); }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+        .btn-outline:hover { background: rgba(255,255,255,0.1); }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; }
+        .btn-block { width: 100%; }
+
+        .car-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        .car-item {
+            background: rgba(255,255,255,0.05);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+        .car-item:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
+        .car-item.selected { border-color: #f093fb; background: rgba(240, 147, 251, 0.15); }
+        .car-item .status { font-size: 0.7em; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.1); }
+        .car-item .status.tuned { background: #00f2fe; color: #000; }
+
+        .hidden { display: none !important; }
+        .mt-10 { margin-top: 10px; }
+        .mb-10 { margin-bottom: 10px; }
+        .text-center { text-align: center; }
+        .text-success { color: #00c853; }
+        .text-error { color: #ff1744; }
+        .text-info { color: #2979ff; }
+        .text-muted { color: #888; font-size: 0.85em; }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            background: #333;
+            color: #fff;
+            transform: translateY(120px);
+            opacity: 0;
+            transition: all 0.5s;
+            z-index: 1000;
+            max-width: 400px;
+            font-size: 14px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: #00c853; }
+        .toast.error { background: #d50000; }
+        .toast.info { background: #2979ff; }
+
+        .loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .status-box {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow: auto;
+        }
+        .status-box.success { background: rgba(0,200,83,0.12); border: 1px solid rgba(0,200,83,0.3); }
+        .status-box.error { background: rgba(213,0,0,0.12); border: 1px solid rgba(213,0,0,0.3); }
+        .status-box.info { background: rgba(41,121,255,0.12); border: 1px solid rgba(41,121,255,0.3); }
+        .status-box pre { margin: 0; font-size: 12px; color: #ccc; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .form-row { grid-template-columns: 1fr; } }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #f093fb; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏎️ CarX Tuning Tester</h1>
+    <p class="subtitle">🔧 Test tuning mobil realtime — wajib login dulu!</p>
+
+    <!-- ============================================================ -->
+    <!-- 🚪 LOGIN SECTION -->
+    <!-- ============================================================ -->
+    <div class="card" id="loginSection">
+        <div class="card-title">🔐 Login Akun</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>📧 Email</label>
+                <input type="email" id="loginEmail" placeholder="email@gmail.com">
+            </div>
+            <div class="form-group">
+                <label>🔑 Password</label>
+                <input type="password" id="loginPassword" placeholder="Password">
+            </div>
+            <div class="form-group">
+                <label>🎫 VIP Key</label>
+                <input type="text" id="vipKey" placeholder="VIP Key (opsional)" value="TEST_KEY_123">
+            </div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="handleLogin()">🚀 Login & Ambil Data</button>
+        <div id="loginStatus" class="hidden status-box"></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 🏎️ CAR LIST SECTION -->
+    <!-- ============================================================ -->
+    <div class="card hidden" id="carListSection">
+        <div class="card-title">🏎️ Garasi Mobil <span class="text-muted" id="totalCarsLabel"></span></div>
+        <div id="carListContainer" class="car-list"></div>
+        <div class="mt-10 text-muted" style="display:flex;gap:15px;flex-wrap:wrap;">
+            <span>Session: <strong id="sessionIdDisplay">-</strong></span>
+            <span>Nick: <strong id="nickDisplay">-</strong></span>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 🔧 TUNING SECTION -->
+    <!-- ============================================================ -->
+    <div class="card hidden" id="tuningSection">
+        <div class="card-title">🔧 Tuning Config</div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>🚗 Mobil Terpilih</label>
+                <input type="text" id="selectedCar" readonly placeholder="Pilih mobil dulu" style="background:rgba(255,255,255,0.05);">
+            </div>
+        </div>
+
+        <!-- ENGINE -->
+        <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #f093fb;">
+            <div style="color:#f093fb;font-weight:600;font-size:0.9em;margin-bottom:8px;">⚙️ Engine</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>ECU ID</label>
+                    <select id="ecuId">
+                        <option value="engine_ecu_stock">Stock</option>
+                        <option value="engine_ecu_sport">Sport</option>
+                        <option value="engine_ecu_race" selected>Race</option>
+                        <option value="engine_ecu_pro">Pro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rev Limit</label>
+                    <input type="number" id="revLimit" value="8500" min="6000" max="12000">
+                </div>
+                <div class="form-group">
+                    <label>Engine Power</label>
+                    <input type="number" id="enginePower" value="180" min="50" max="500">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Fuel System</label>
+                    <select id="fuelSystemId">
+                        <option value="engine_fuel_system_stock">Stock</option>
+                        <option value="engine_fuel_system_sport">Sport</option>
+                        <option value="engine_fuel_system_race" selected>Race</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fuel Flow</label>
+                    <input type="number" id="fuelFlow" value="150" min="50" max="300">
+                </div>
+                <div class="form-group">
+                    <label>Turbine</label>
+                    <select id="turbineId">
+                        <option value="engine_turbine_stock1">Stock</option>
+                        <option value="engine_turbine_sport">Sport</option>
+                        <option value="engine_turbine_race" selected>Race</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- BODY -->
+        <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #4facfe;">
+            <div style="color:#4facfe;font-weight:600;font-size:0.9em;margin-bottom:8px;">🏗️ Body / Chassis</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Chassis ID</label>
+                    <select id="chassisId">
+                        <option value="body_strengthening_0">Stock</option>
+                        <option value="body_strengthening_sport">Sport</option>
+                        <option value="body_strengthening_race" selected>Race</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rigidity</label>
+                    <input type="number" id="chassisRigidity" value="120" min="50" max="200">
+                </div>
+                <div class="form-group">
+                    <label>Weight Reduction</label>
+                    <select id="weightReductionId">
+                        <option value="body_weight_reduction_0">Stock</option>
+                        <option value="body_weight_reduction_1">Lv.1</option>
+                        <option value="body_weight_reduction_2">Lv.2</option>
+                        <option value="body_weight_reduction_3" selected>Lv.3</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- SUSPENSION -->
+        <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #f6d365;">
+            <div style="color:#f6d365;font-weight:600;font-size:0.9em;margin-bottom:8px;">🔧 Suspension</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Front Arms</label>
+                    <select id="frontArmsId">
+                        <option value="suspension_arms_front_1">Lv.1</option>
+                        <option value="suspension_arms_front_2">Lv.2</option>
+                        <option value="suspension_arms_front_3" selected>Lv.3</option>
+                        <option value="suspension_arms_front_4">Lv.4</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Front Camber</label>
+                    <input type="number" id="frontCamber" value="-3.0" step="0.1" min="-5" max="0">
+                </div>
+                <div class="form-group">
+                    <label>Front Toe</label>
+                    <input type="number" id="frontToe" value="0.5" step="0.1" min="-2" max="2">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Brakes</label>
+                    <select id="brakesId">
+                        <option value="suspension_brakes_stock">Stock</option>
+                        <option value="suspension_brakes_sport">Sport</option>
+                        <option value="suspension_brakes_race" selected>Race</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Brake Power</label>
+                    <input type="number" id="brakePower" value="150" min="50" max="300">
+                </div>
+            </div>
+        </div>
+
+        <!-- WHEELS -->
+        <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #00f2fe;">
+            <div style="color:#00f2fe;font-weight:600;font-size:0.9em;margin-bottom:8px;">🛞 Wheels</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Front Rim</label>
+                    <select id="frontRimId">
+                        <option value="wheel_rim_front_18">18"</option>
+                        <option value="wheel_rim_front_19">19"</option>
+                        <option value="wheel_rim_front_20">20"</option>
+                        <option value="wheel_rim_front_22" selected>22"</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rear Rim</label>
+                    <select id="rearRimId">
+                        <option value="wheel_rim_rear_18">18"</option>
+                        <option value="wheel_rim_rear_19">19"</option>
+                        <option value="wheel_rim_rear_20">20"</option>
+                        <option value="wheel_rim_rear_22" selected>22"</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESOURCES -->
+        <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:10px;border-left:3px solid #00c853;">
+            <div style="color:#00c853;font-weight:600;font-size:0.9em;margin-bottom:8px;">⛽ Resources</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Bensin (0-40)</label>
+                    <input type="number" id="gasolineAmount" value="40" min="0" max="40">
+                </div>
+                <div class="form-group">
+                    <label>Nitro (0-20)</label>
+                    <input type="number" id="nitroAmount" value="20" min="0" max="20">
+                </div>
+                <div class="form-group">
+                    <label>Body Kit</label>
+                    <input type="text" id="bodyKitId" placeholder="lexusrcf_cbw_bkit" value="lexusrcf_cbw_bkit">
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="btn-group">
+            <button class="btn btn-success" onclick="handleTune()">🔧 Apply Tuning</button>
+            <button class="btn btn-warning" onclick="handleReset()">🔄 Reset</button>
+            <button class="btn btn-outline" onclick="handleGetStructure()">🔍 Cek Struktur</button>
+        </div>
+        <div id="tuningStatus" class="hidden status-box"></div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TOAST -->
+<!-- ============================================================ -->
+<div id="toast" class="toast"></div>
+
+<!-- ============================================================ -->
+<!-- SCRIPT -->
+<!-- ============================================================ -->
+<script>
+// ================================================================
+// 🔧 KONFIGURASI
+// ================================================================
+// GANTI URL SESUAI DEPLOYAN KAMU
+const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/gateway-tune';
+// ATAU LANGSUNG KE CORE:
+// const CORE_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/tuning';
+
+const USE_GATEWAY = true;
+const FUNCTION_URL = USE_GATEWAY ? GATEWAY_URL : CORE_URL;
+
+let sessionId = null;
+let selectedCarId = null;
+let carList = [];
+
+// ================================================================
+// 🛠️ HELPER
+// ================================================================
+function getVal(id) { return document.getElementById(id).value; }
+function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function showToast(msg, type = 'info') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type}`;
+    setTimeout(() => t.classList.add('show'), 100);
+    setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function showStatus(id, msg, type = 'info') {
+    const el = document.getElementById(id);
+    el.classList.remove('hidden');
+    el.className = `status-box ${type}`;
+    el.innerHTML = msg;
+}
+
+function hideStatus(id) {
+    document.getElementById(id).classList.add('hidden');
+}
+
+function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (loading) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading"></span> Processing...';
+    } else {
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.original || 'Submit';
+    }
+}
+
+// ================================================================
+// 📡 API CALL
+// ================================================================
+async function callFunction(step, data) {
+    const payload = {
+        step: step,
+        vip_key: getVal('vipKey'),
+        hwid: 'WEB_TESTER',
+        ...data
+    };
+
+    // Kalo langsung ke core, tambahin key
+    if (!USE_GATEWAY) {
+        payload.key = '『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』-CLIENT-SECURE-VVIP';
+        payload.stempel_sah = 'titik-temu-super-secured-pass-v45';
+    }
+
+    const response = await fetch(FUNCTION_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    return result;
+}
+
+// ================================================================
+// 🚀 LOGIN
+// ================================================================
+async function handleLogin() {
+    const email = getVal('loginEmail');
+    const pass = getVal('loginPassword');
+    
+    if (!email || !pass) {
+        showToast('⚠️ Email dan Password wajib diisi!', 'error');
+        return;
+    }
+
+    showStatus('loginStatus', '⏳ Login...', 'info');
+    setLoading('loginBtn', true);
+
+    try {
+        const result = await callFunction('login_and_get_profile', {
+            user: email,
+            pass: pass
+        });
+
+        if (result.status === 'success') {
+            sessionId = result.session_id;
+            carList = result.cars || [];
+            
+            showStatus('loginStatus', `
+✅ <strong>Login SUKSES!</strong>
+👤 Nickname: ${result.nickname || '-'}
+🏎️ Total Mobil: ${result.total_cars || 0}
+📱 Session: ${sessionId}
+            `, 'success');
+
+            document.getElementById('carListSection').classList.remove('hidden');
+            document.getElementById('tuningSection').classList.remove('hidden');
+            document.getElementById('sessionIdDisplay').textContent = sessionId;
+            document.getElementById('nickDisplay').textContent = result.nickname || '-';
+            document.getElementById('totalCarsLabel').textContent = `(${result.total_cars || 0} mobil)`;
+
+            renderCarList();
+            showToast('✅ Login sukses!', 'success');
+        } else {
+            showStatus('loginStatus', `❌ ${result.error || 'Login gagal!'}`, 'error');
+            showToast('❌ Login gagal!', 'error');
+        }
+    } catch (err) {
+        showStatus('loginStatus', `❌ Error: ${err.message}`, 'error');
+        showToast('❌ Error koneksi!', 'error');
+    }
+    setLoading('loginBtn', false);
+}
+
+// ================================================================
+// 🏎️ RENDER CAR LIST
+// ================================================================
+function renderCarList() {
+    const container = document.getElementById('carListContainer');
+    container.innerHTML = '';
+
+    if (!carList || carList.length === 0) {
+        container.innerHTML = '<div class="text-muted">Tidak ada mobil di garasi</div>';
+        return;
+    }
+
+    carList.forEach(car => {
+        const div = document.createElement('div');
+        div.className = `car-item${selectedCarId === car.id ? ' selected' : ''}`;
+        div.innerHTML = `
+            <span>${car.name}</span>
+            <span class="status${car.has_tuning ? ' tuned' : ''}">
+                ${car.has_tuning ? '✅' : '❌'}
+            </span>
+        `;
+        div.onclick = () => selectCar(car.id);
+        container.appendChild(div);
+    });
+
+    // Auto select first car
+    if (!selectedCarId && carList.length > 0) {
+        selectCar(carList[0].id);
+    }
+}
+
+function selectCar(carId) {
+    selectedCarId = carId;
+    const car = carList.find(c => c.id === carId);
+    if (car) {
+        document.getElementById('selectedCar').value = `${car.name} (ID: ${car.id})`;
+        renderCarList();
+        showToast(`🚗 ${car.name} dipilih!`, 'info');
+    }
+}
+
+// ================================================================
+// 🔧 BUILD TUNE CONFIG
+// ================================================================
+function buildTuneConfig() {
+    return {
+        engine: {
+            ecu: {
+                id: getVal('ecuId'),
+                stat_tunes: {
+                    engine_rev_limit: getNum('revLimit'),
+                    engine_power: getNum('enginePower')
+                }
+            },
+            fuel_system: {
+                id: getVal('fuelSystemId'),
+                stat_tunes: { fuel_flow: getNum('fuelFlow') }
+            },
+            turbine: { id: getVal('turbineId'), stat_tunes: {} }
+        },
+        body: {
+            strengthening: {
+                id: getVal('chassisId'),
+                stat_tunes: { chassis_rigidity: getNum('chassisRigidity') }
+            },
+            weight_reduction: {
+                id: getVal('weightReductionId'),
+                stat_tunes: { weight: getNum('weightReductionId') === 'body_weight_reduction_0' ? 0 : -180 }
+            }
+        },
+        suspension: {
+            front_arms: {
+                id: getVal('frontArmsId'),
+                stat_tunes: {
+                    suspension_front_camber: { value: getNum('frontCamber') },
+                    suspension_front_toe: { value: getNum('frontToe') }
+                }
+            },
+            brakes: {
+                id: getVal('brakesId'),
+                stat_tunes: { brake_power: getNum('brakePower') }
+            }
+        },
+        wheels: {
+            front_rim: { id: getVal('frontRimId'), stat_tunes: {} },
+            rear_rim: { id: getVal('rearRimId'), stat_tunes: {} }
+        },
+        resources: {
+            gasoline: { amount: getNum('gasolineAmount'), max: 40 },
+            nitro: { amount: getNum('nitroAmount'), max: 20 }
+        },
+        visual: {
+            body_kit: getVal('bodyKitId') || undefined
+        }
+    };
+}
+
+// ================================================================
+// 🔧 TUNE HANDLER
+// ================================================================
+async function handleTune() {
+    if (!sessionId) { showToast('⚠️ Login dulu!', 'error'); return; }
+    if (!selectedCarId) { showToast('⚠️ Pilih mobil dulu!', 'error'); return; }
+
+    const tuneConfig = buildTuneConfig();
+    showStatus('tuningStatus', '⏳ Proses tuning...', 'info');
+    setLoading('tuneBtn', true);
+
+    try {
+        const result = await callFunction('tune_car', {
+            session_id: sessionId,
+            car_id: selectedCarId,
+            tune_config: tuneConfig
+        });
+
+        if (result.status === 'success') {
+            showStatus('tuningStatus', `✅ ${result.message || 'Tuning sukses!'}`, 'success');
+            showToast('✅ Tuning berhasil!', 'success');
+            // Refresh data
+            setTimeout(() => handleLogin(), 1000);
+        } else {
+            showStatus('tuningStatus', `❌ ${result.error || 'Tuning gagal!'}`, 'error');
+            showToast('❌ Tuning gagal!', 'error');
+        }
+    } catch (err) {
+        showStatus('tuningStatus', `❌ Error: ${err.message}`, 'error');
+        showToast('❌ Error koneksi!', 'error');
+    }
+    setLoading('tuneBtn', false);
+}
+
+// ================================================================
+// 🔄 RESET HANDLER
+// ================================================================
+async function handleReset() {
+    if (!sessionId || !selectedCarId) {
+        showToast('⚠️ Login dan pilih mobil dulu!', 'error');
+        return;
+    }
+
+    showStatus('tuningStatus', '⏳ Reset tuning...', 'info');
+    setLoading('resetBtn', true);
+
+    try {
+        const result = await callFunction('reset_car_tune', {
+            session_id: sessionId,
+            car_id: selectedCarId
+        });
+
+        if (result.status === 'success') {
+            showStatus('tuningStatus', `✅ ${result.message || 'Reset sukses!'}`, 'success');
+            showToast('✅ Reset berhasil!', 'success');
+            setTimeout(() => handleLogin(), 1000);
+        } else {
+            showStatus('tuningStatus', `❌ ${result.error || 'Reset gagal!'}`, 'error');
+            showToast('❌ Reset gagal!', 'error');
+        }
+    } catch (err) {
+        showStatus('tuningStatus', `❌ Error: ${err.message}`, 'error');
+        showToast('❌ Error koneksi!', 'error');
+    }
+    setLoading('resetBtn', false);
+}
+
+// ================================================================
+// 🔍 GET STRUCTURE
+// ================================================================
+async function handleGetStructure() {
+    if (!sessionId || !selectedCarId) {
+        showToast('⚠️ Login dan pilih mobil dulu!', 'error');
+        return;
+    }
+
+    showStatus('tuningStatus', '⏳ Ambil struktur...', 'info');
+    setLoading('structBtn', true);
+
+    try {
+        const result = await callFunction('get_car_tuning_structure', {
+            session_id: sessionId,
+            car_id: selectedCarId
+        });
+
+        if (result.status === 'success') {
+            const structure = result.tuning_structure || {};
+            const tuning = structure.tuning || {};
+            const cells = tuning.cells || {};
+            
+            let html = `<strong>🚗 ${structure.desc_id || 'Unknown'}</strong>\n`;
+            html += `🎨 Body Kit: ${structure.body_kit || 'None'}\n\n`;
+
+            const cellNames = { '0': 'Engine', '1': 'Body/Chassis', '2': 'Transmission', '3': 'Suspension', '4': 'Wheels' };
+            
+            for (const [key, cell] of Object.entries(cells)) {
+                html += `📂 Cell ${key}: ${cellNames[key] || cell.name || 'Unknown'}\n`;
+                html += `   ID: ${cell.id || 'None'}\n`;
+                for (const [subKey, sub] of Object.entries(cell.sub_cells || {})) {
+                    const statTunes = sub.stat_tunes || {};
+                    if (Object.keys(statTunes).length > 0) {
+                        html += `   └── [${subKey}] ${sub.id || 'None'}\n`;
+                        for (const [stat, val] of Object.entries(statTunes)) {
+                            html += `        ${stat}: ${JSON.stringify(val)}\n`;
+                        }
+                    }
+                }
+                html += '\n';
+            }
+            
+            showStatus('tuningStatus', `<pre>${html}</pre>`, 'info');
+            showToast('✅ Struktur berhasil diambil!', 'success');
+        } else {
+            showStatus('tuningStatus', `❌ ${result.error || 'Gagal!'}`, 'error');
+            showToast('❌ Gagal ambil struktur!', 'error');
+        }
+    } catch (err) {
+        showStatus('tuningStatus', `❌ Error: ${err.message}`, 'error');
+        showToast('❌ Error koneksi!', 'error');
+    }
+    setLoading('structBtn', false);
+}
+
+// ================================================================
+// 🔑 SET DEFAULT BUTTON TEXT
+// ================================================================
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.dataset.original = btn.innerHTML;
+    });
+});
+
+// Enter key support
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const active = document.activeElement;
+        if (active && (active.id === 'loginEmail' || active.id === 'loginPassword' || active.id === 'vipKey')) {
+            handleLogin();
+        }
+    }
+});
+</script>
+
+</body>
+</html>
