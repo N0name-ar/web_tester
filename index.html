@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏎️ CarX Tuning Tester</title>
+    <title>🏎️ CarX Full Tuning Tester</title>
     <style>
         /* ============================================================== */
-        /* STYLE LENGKAP - DARK THEME */
+        /* STYLE - DARK THEME */
         /* ============================================================== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -16,22 +16,16 @@
             min-height: 100vh;
             padding: 20px;
         }
-        .container { max-width: 1100px; margin: 0 auto; }
-        .header {
-            text-align: center;
-            padding: 20px 0 30px;
-        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; padding: 20px 0 30px; }
         .header h1 {
             font-size: 2.5em;
             background: linear-gradient(45deg, #f093fb, #f5576c);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .header p {
-            color: #888;
-            margin-top: 5px;
-            font-size: 0.9em;
-        }
+        .header p { color: #888; margin-top: 5px; font-size: 0.9em; }
+
         .card {
             background: rgba(255,255,255,0.05);
             backdrop-filter: blur(10px);
@@ -43,12 +37,18 @@
         .card-title {
             font-size: 1.1em;
             margin-bottom: 15px;
-            color: #f093fb;
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 10px;
         }
+        .card-title.engine { color: #f5576c; }
+        .card-title.body { color: #f093fb; }
+        .card-title.suspension { color: #f6d365; }
+        .card-title.wheels { color: #00f2fe; }
+        .card-title.resources { color: #00c853; }
+        .card-title.visual { color: #ff6b9d; }
+
         .form-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -60,7 +60,7 @@
             flex-direction: column;
         }
         .form-group label {
-            font-size: 0.8em;
+            font-size: 0.75em;
             color: #aaa;
             margin-bottom: 4px;
             font-weight: 600;
@@ -80,7 +80,8 @@
             box-shadow: 0 0 20px rgba(240, 147, 251, 0.15);
         }
         .form-group input::placeholder { color: #666; }
-        .form-group input:disabled { opacity: 0.5; cursor: not-allowed; }
+        .form-group input[type="number"] { -moz-appearance: textfield; }
+        .form-group input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
 
         .btn {
             padding: 10px 24px;
@@ -95,29 +96,21 @@
         }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
         .btn-block { width: 100%; }
-        .btn-sm { padding: 6px 14px; font-size: 12px; }
-
         .btn-primary { background: linear-gradient(45deg, #f093fb, #f5576c); color: #fff; }
         .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3); }
         .btn-success { background: linear-gradient(45deg, #4facfe, #00f2fe); color: #fff; }
         .btn-success:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(79, 172, 254, 0.3); }
         .btn-danger { background: linear-gradient(45deg, #f093fb, #f5576c); color: #fff; }
-        .btn-danger:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3); }
         .btn-warning { background: linear-gradient(45deg, #f6d365, #fda085); color: #333; }
         .btn-warning:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(253, 160, 133, 0.3); }
         .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; }
         .btn-outline:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
-
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-        .mt-10 { margin-top: 10px; }
-        .mb-10 { margin-bottom: 10px; }
-        .text-center { text-align: center; }
-        .text-muted { color: #888; font-size: 0.85em; }
-        .text-success { color: #00c853; }
-        .text-error { color: #ff1744; }
-        .text-info { color: #2979ff; }
 
         .hidden { display: none !important; }
+        .mt-10 { margin-top: 10px; }
+        .mb-10 { margin-bottom: 10px; }
+        .text-muted { color: #888; font-size: 0.85em; }
 
         /* CAR LIST */
         .car-list {
@@ -149,7 +142,6 @@
         .car-item .status { font-size: 0.7em; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.1); }
         .car-item .status.tuned { background: #00f2fe; color: #000; }
 
-        /* TUNING SECTIONS */
         .tune-section {
             background: rgba(255,255,255,0.03);
             border-radius: 10px;
@@ -158,16 +150,38 @@
             border-left: 3px solid #4facfe;
         }
         .tune-section .label {
-            color: #4facfe;
             font-weight: 600;
             font-size: 0.85em;
             margin-bottom: 8px;
         }
-        .tune-section .label.danger { color: #f5576c; }
-        .tune-section .label.success { color: #00c853; }
-        .tune-section .label.warning { color: #f6d365; }
+        .label-engine { color: #f5576c; }
+        .label-body { color: #f093fb; }
+        .label-suspension { color: #f6d365; }
+        .label-wheels { color: #00f2fe; }
+        .label-resources { color: #00c853; }
+        .label-visual { color: #ff6b9d; }
 
-        /* STATUS BOX */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 5px 0 10px;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8em;
+            color: #ccc;
+            cursor: pointer;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #f093fb;
+            cursor: pointer;
+        }
+
         .status-box {
             padding: 12px 16px;
             border-radius: 10px;
@@ -183,7 +197,6 @@
         .status-box.info { background: rgba(41,121,255,0.12); border: 1px solid rgba(41,121,255,0.3); }
         .status-box pre { margin: 0; font-size: 12px; color: #ccc; }
 
-        /* TOAST */
         .toast {
             position: fixed;
             bottom: 30px;
@@ -216,9 +229,7 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         @media (max-width: 768px) {
-            .grid-2 { grid-template-columns: 1fr; }
             .form-row { grid-template-columns: 1fr; }
         }
     </style>
@@ -231,15 +242,15 @@
     <!-- HEADER -->
     <!-- ============================================================ -->
     <div class="header">
-        <h1>🏎️ CarX Tuning Tester</h1>
-        <p>🔧 Real-time tuning — login dulu, pilih mobil, tune!</p>
+        <h1>🏎️ CarX Full Tuning Tester</h1>
+        <p>🔧 Bebas berkreasi — Body lepas, Ban Donat, Jangkung, Suara Engine, Sensor Rem!</p>
     </div>
 
     <!-- ============================================================ -->
     <!-- LOGIN SECTION -->
     <!-- ============================================================ -->
     <div class="card" id="loginSection">
-        <div class="card-title">🔐 Login Akun</div>
+        <div class="card-title" style="color:#f093fb;">🔐 Login Akun</div>
         <div class="form-row">
             <div class="form-group">
                 <label>📧 Email</label>
@@ -262,7 +273,7 @@
     <!-- CAR LIST SECTION -->
     <!-- ============================================================ -->
     <div class="card hidden" id="carListSection">
-        <div class="card-title">🏎️ Garasi Mobil <span class="text-muted" id="totalCarsLabel"></span></div>
+        <div class="card-title" style="color:#4facfe;">🏎️ Garasi Mobil <span class="text-muted" id="totalCarsLabel"></span></div>
         <div id="carListContainer" class="car-list"></div>
         <div class="mt-10 text-muted" style="display:flex;gap:15px;flex-wrap:wrap;">
             <span>Session: <strong id="sessionIdDisplay">-</strong></span>
@@ -271,10 +282,10 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- TUNING SECTION -->
+    <!-- FULL TUNING SECTION -->
     <!-- ============================================================ -->
     <div class="card hidden" id="tuningSection">
-        <div class="card-title">🔧 Tuning Config</div>
+        <div class="card-title" style="color:#f093fb;">🔧 Full Tuning Config</div>
 
         <div class="form-row">
             <div class="form-group">
@@ -283,9 +294,11 @@
             </div>
         </div>
 
-        <!-- ENGINE -->
+        <!-- ============================================================ -->
+        <!-- 1. ENGINE - MESIN -->
+        <!-- ============================================================ -->
         <div class="tune-section">
-            <div class="label">⚙️ Engine</div>
+            <div class="label label-engine">⚙️ ENGINE / MESIN</div>
             <div class="form-row">
                 <div class="form-group">
                     <label>ECU ID</label>
@@ -297,11 +310,11 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Rev Limit</label>
-                    <input type="number" id="revLimit" value="8500" min="6000" max="12000">
+                    <label>Rev Limit (RPM)</label>
+                    <input type="number" id="revLimit" value="8500" min="4000" max="12000">
                 </div>
                 <div class="form-group">
-                    <label>Engine Power</label>
+                    <label>Engine Power (HP)</label>
                     <input type="number" id="enginePower" value="180" min="50" max="500">
                 </div>
             </div>
@@ -324,26 +337,102 @@
                         <option value="engine_turbine_stock1">Stock</option>
                         <option value="engine_turbine_sport">Sport</option>
                         <option value="engine_turbine_race" selected>Race</option>
+                        <option value="engine_turbine_pro">Pro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Engine Block</label>
+                    <select id="engineBlockId">
+                        <option value="engine_block_stock">Stock</option>
+                        <option value="engine_block_sport">Sport</option>
+                        <option value="engine_block_race" selected>Race</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Camshaft</label>
+                    <select id="camshaftId">
+                        <option value="engine_camshaft_stock">Stock</option>
+                        <option value="engine_camshaft_sport">Sport</option>
+                        <option value="engine_camshaft_race" selected>Race</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cooling System</label>
+                    <select id="coolingId">
+                        <option value="engine_cooling_stock">Stock</option>
+                        <option value="engine_cooling_sport">Sport</option>
+                        <option value="engine_cooling_race" selected>Race</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Cylinder Head</label>
+                    <select id="cylinderHeadId">
+                        <option value="engine_cylinder_head_stock">Stock</option>
+                        <option value="engine_cylinder_head_sport">Sport</option>
+                        <option value="engine_cylinder_head_race" selected>Race</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Exhaust Manifold</label>
+                    <select id="exhaustManifoldId">
+                        <option value="engine_exhaust_manifold_stock">Stock</option>
+                        <option value="engine_exhaust_manifold_sport">Sport</option>
+                        <option value="engine_exhaust_manifold_race" selected>Race</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Exhaust System</label>
+                    <select id="exhaustId">
+                        <option value="engine_exhaust_stock">Stock</option>
+                        <option value="engine_exhaust_sport">Sport</option>
+                        <option value="engine_exhaust_race" selected>Race</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Intake Manifold</label>
+                    <select id="intakeManifoldId">
+                        <option value="engine_intake_manifold_stock">Stock</option>
+                        <option value="engine_intake_manifold_sport">Sport</option>
+                        <option value="engine_intake_manifold_race" selected>Race</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>🔊 Suara Engine</label>
+                    <select id="engineSound">
+                        <option value="default">Default</option>
+                        <option value="v8">V8 Growl</option>
+                        <option value="v12">V12 Scream</option>
+                        <option value="turbo">Turbo Spool</option>
+                        <option value="electric">Electric</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <!-- BODY -->
+        <!-- ============================================================ -->
+        <!-- 2. BODY / CHASSIS - SASIS -->
+        <!-- ============================================================ -->
         <div class="tune-section">
-            <div class="label danger">🏗️ Body / Chassis</div>
+            <div class="label label-body">🏗️ BODY / CHASSIS - SASIS</div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Chassis ID</label>
+                    <label>Chassis Strengthening</label>
                     <select id="chassisId">
                         <option value="body_strengthening_0">Stock</option>
                         <option value="body_strengthening_sport">Sport</option>
                         <option value="body_strengthening_race" selected>Race</option>
+                        <option value="body_strengthening_pro">Pro</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Rigidity</label>
-                    <input type="number" id="chassisRigidity" value="120" min="50" max="200">
+                    <label>Chassis Rigidity</label>
+                    <input type="number" id="chassisRigidity" value="120" min="50" max="250">
                 </div>
                 <div class="form-group">
                     <label>Weight Reduction</label>
@@ -355,11 +444,40 @@
                     </select>
                 </div>
             </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Weight (kg)</label>
+                    <input type="number" id="weightReduction" value="-180" min="-400" max="0">
+                </div>
+                <div class="form-group">
+                    <label>Front Aero</label>
+                    <select id="frontAeroId">
+                        <option value="body_front_aero_0">Stock</option>
+                        <option value="body_front_aero_1">Lv.1</option>
+                        <option value="body_front_aero_2">Lv.2</option>
+                        <option value="body_front_aero_3" selected>Lv.3</option>
+                        <option value="body_front_aero_4">Lv.4</option>
+                        <option value="body_front_aero_5">Lv.5</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rear Aero</label>
+                    <select id="rearAeroId">
+                        <option value="body_rear_aero_0">Stock</option>
+                        <option value="body_rear_aero_1">Lv.1</option>
+                        <option value="body_rear_aero_2">Lv.2</option>
+                        <option value="body_rear_aero_3" selected>Lv.3</option>
+                        <option value="body_rear_aero_4">Lv.4</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
-        <!-- SUSPENSION -->
+        <!-- ============================================================ -->
+        <!-- 3. SUSPENSION -->
+        <!-- ============================================================ -->
         <div class="tune-section">
-            <div class="label warning">🔧 Suspension</div>
+            <div class="label label-suspension">🔧 SUSPENSION - SENSOR REM & BAN</div>
             <div class="form-row">
                 <div class="form-group">
                     <label>Front Arms</label>
@@ -372,7 +490,7 @@
                 </div>
                 <div class="form-group">
                     <label>Front Camber</label>
-                    <input type="number" id="frontCamber" value="-3.0" step="0.1" min="-5" max="0">
+                    <input type="number" id="frontCamber" value="-3.0" step="0.1" min="-8" max="0">
                 </div>
                 <div class="form-group">
                     <label>Front Toe</label>
@@ -381,48 +499,231 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Brakes</label>
+                    <label>Rear Arms</label>
+                    <select id="rearArmsId">
+                        <option value="suspension_arms_rear_1">Lv.1</option>
+                        <option value="suspension_arms_rear_2" selected>Lv.2</option>
+                        <option value="suspension_arms_rear_3">Lv.3</option>
+                        <option value="suspension_arms_rear_4">Lv.4</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rear Camber</label>
+                    <input type="number" id="rearCamber" value="-2.5" step="0.1" min="-8" max="0">
+                </div>
+                <div class="form-group">
+                    <label>Rear Toe</label>
+                    <input type="number" id="rearToe" value="0.3" step="0.1" min="-2" max="2">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Front Springs</label>
+                    <select id="frontSpringsId">
+                        <option value="suspension_springs_front_1">Lv.1</option>
+                        <option value="suspension_springs_front_2" selected>Lv.2</option>
+                        <option value="suspension_springs_front_3">Lv.3</option>
+                        <option value="suspension_springs_front_4">Lv.4</option>
+                        <option value="suspension_springs_front_5">Lv.5</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rear Springs</label>
+                    <select id="rearSpringsId">
+                        <option value="suspension_springs_rear_1">Lv.1</option>
+                        <option value="suspension_springs_rear_2" selected>Lv.2</option>
+                        <option value="suspension_springs_rear_3">Lv.3</option>
+                        <option value="suspension_springs_rear_4">Lv.4</option>
+                        <option value="suspension_springs_rear_5">Lv.5</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Front Shocks</label>
+                    <select id="frontShocksId">
+                        <option value="suspension_shocks_front_stock">Stock</option>
+                        <option value="suspension_shocks_front_1">Lv.1</option>
+                        <option value="suspension_shocks_front_2">Lv.2</option>
+                        <option value="suspension_shocks_front_3" selected>Lv.3</option>
+                        <option value="suspension_shocks_front_4">Lv.4</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rear Shocks</label>
+                    <select id="rearShocksId">
+                        <option value="suspension_shocks_rear_stock">Stock</option>
+                        <option value="suspension_shocks_rear_1">Lv.1</option>
+                        <option value="suspension_shocks_rear_2">Lv.2</option>
+                        <option value="suspension_shocks_rear_3" selected>Lv.3</option>
+                        <option value="suspension_shocks_rear_4">Lv.4</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Front Stabilizers</label>
+                    <select id="frontStabsId">
+                        <option value="suspension_stabs_front_stock">Stock</option>
+                        <option value="suspension_stabs_front_1">Lv.1</option>
+                        <option value="suspension_stabs_front_2">Lv.2</option>
+                        <option value="suspension_stabs_front_3" selected>Lv.3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rear Stabilizers</label>
+                    <select id="rearStabsId">
+                        <option value="suspension_stabs_rear_stock">Stock</option>
+                        <option value="suspension_stabs_rear_1">Lv.1</option>
+                        <option value="suspension_stabs_rear_2">Lv.2</option>
+                        <option value="suspension_stabs_rear_3" selected>Lv.3</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>🛞 Brakes (Sensor Rem)</label>
                     <select id="brakesId">
                         <option value="suspension_brakes_stock">Stock</option>
                         <option value="suspension_brakes_sport">Sport</option>
                         <option value="suspension_brakes_race" selected>Race</option>
+                        <option value="suspension_brakes_pro">Pro</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Brake Power</label>
-                    <input type="number" id="brakePower" value="150" min="50" max="300">
+                    <input type="number" id="brakePower" value="150" min="50" max="350">
                 </div>
             </div>
         </div>
 
-        <!-- WHEELS -->
+        <!-- ============================================================ -->
+        <!-- 4. WHEELS - BAN -->
+        <!-- ============================================================ -->
         <div class="tune-section">
-            <div class="label success">🛞 Wheels</div>
+            <div class="label label-wheels">🛞 WHEELS - BAN & RIM</div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Front Rim</label>
+                    <label>Front Rim Size</label>
                     <select id="frontRimId">
+                        <option value="wheel_rim_front_15">15"</option>
+                        <option value="wheel_rim_front_16">16"</option>
+                        <option value="wheel_rim_front_17">17"</option>
                         <option value="wheel_rim_front_18">18"</option>
                         <option value="wheel_rim_front_19">19"</option>
                         <option value="wheel_rim_front_20">20"</option>
+                        <option value="wheel_rim_front_21">21"</option>
                         <option value="wheel_rim_front_22" selected>22"</option>
+                        <option value="wheel_rim_front_24">24"</option>
+                        <option value="wheel_rim_front_26">26"</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Rear Rim</label>
+                    <label>Rear Rim Size</label>
                     <select id="rearRimId">
+                        <option value="wheel_rim_rear_15">15"</option>
+                        <option value="wheel_rim_rear_16">16"</option>
+                        <option value="wheel_rim_rear_17">17"</option>
                         <option value="wheel_rim_rear_18">18"</option>
                         <option value="wheel_rim_rear_19">19"</option>
                         <option value="wheel_rim_rear_20">20"</option>
+                        <option value="wheel_rim_rear_21">21"</option>
                         <option value="wheel_rim_rear_22" selected>22"</option>
+                        <option value="wheel_rim_rear_24">24"</option>
+                        <option value="wheel_rim_rear_26">26"</option>
                     </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Front Tire</label>
+                    <select id="frontTireId">
+                        <option value="wheel_tire_front_low">Low Profile</option>
+                        <option value="wheel_tire_front_medium" selected>Medium</option>
+                        <option value="wheel_tire_front_high">High</option>
+                        <option value="wheel_tire_front_offroad">Offroad</option>
+                        <option value="wheel_tire_front_donut">🍩 Donut</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rear Tire</label>
+                    <select id="rearTireId">
+                        <option value="wheel_tire_rear_low">Low Profile</option>
+                        <option value="wheel_tire_rear_medium" selected>Medium</option>
+                        <option value="wheel_tire_rear_high">High</option>
+                        <option value="wheel_tire_rear_offroad">Offroad</option>
+                        <option value="wheel_tire_rear_donut">🍩 Donut</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Front Spacers (mm)</label>
+                    <input type="number" id="frontSpacers" value="0" min="0" max="50" step="5">
+                </div>
+                <div class="form-group">
+                    <label>Rear Spacers (mm)</label>
+                    <input type="number" id="rearSpacers" value="0" min="0" max="50" step="5">
+                </div>
+                <div class="form-group">
+                    <label>Tire Pressure (PSI)</label>
+                    <input type="number" id="tirePressure" value="32" min="10" max="60">
                 </div>
             </div>
         </div>
 
-        <!-- RESOURCES -->
+        <!-- ============================================================ -->
+        <!-- 5. VISUAL TUNING - BODY LEPAS & STYLING -->
+        <!-- ============================================================ -->
         <div class="tune-section">
-            <div class="label">⛽ Resources</div>
+            <div class="label label-visual">🎨 VISUAL TUNING - BODY LEPAS & STYLING</div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Body Kit ID</label>
+                    <input type="text" id="bodyKitId" placeholder="contoh: lexusrcf_cbw_bkit" value="lexusrcf_cbw_bkit">
+                </div>
+            </div>
+
+            <div style="margin:10px 0 5px;font-size:0.85em;color:#ff6b9d;font-weight:600;">🔴 CENTANG UNTUK COpot BODY:</div>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="removeBonnet"> Bonnet</label>
+                <label><input type="checkbox" id="removeTrunk"> Trunk</label>
+                <label><input type="checkbox" id="removeDoors"> Doors</label>
+                <label><input type="checkbox" id="removeFrontBumper"> Front Bumper</label>
+                <label><input type="checkbox" id="removeRearBumper"> Rear Bumper</label>
+                <label><input type="checkbox" id="removeSkirts"> Skirts</label>
+                <label><input type="checkbox" id="removeSpoiler"> Spoiler</label>
+                <label><input type="checkbox" id="removeRoof"> Roof</label>
+                <label><input type="checkbox" id="removeMirrors"> Mirrors</label>
+                <label><input type="checkbox" id="removeChassis"> Chassis</label>
+            </div>
+
+            <div style="margin:10px 0 5px;font-size:0.85em;color:#00f2fe;font-weight:600;">🔵 STYLING:</div>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="enableVinyls"> Tambah Vinyls</label>
+                <label><input type="checkbox" id="enableNeon"> Neon</label>
+                <label><input type="checkbox" id="enableFlame"> Exhaust Flame</label>
+                <label><input type="checkbox" id="enableTinted"> Window Tint</label>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Paint Color (Hex)</label>
+                    <input type="text" id="paintColor" placeholder="#FF0000" value="#F093FB">
+                </div>
+                <div class="form-group">
+                    <label>Rim Color (Hex)</label>
+                    <input type="text" id="rimColor" placeholder="#FFFFFF" value="#FFFFFF">
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 6. RESOURCES -->
+        <!-- ============================================================ -->
+        <div class="tune-section">
+            <div class="label label-resources">⛽ RESOURCES - BENSIN & NITRO</div>
             <div class="form-row">
                 <div class="form-group">
                     <label>Bensin (0-40)</label>
@@ -433,13 +734,19 @@
                     <input type="number" id="nitroAmount" value="20" min="0" max="20">
                 </div>
                 <div class="form-group">
-                    <label>Body Kit</label>
-                    <input type="text" id="bodyKitId" placeholder="lexusrcf_cbw_bkit" value="lexusrcf_cbw_bkit">
+                    <label>Gasoline Type</label>
+                    <select id="gasolineType">
+                        <option value="simple_gasoline">Regular</option>
+                        <option value="sports_gasoline" selected>Sport</option>
+                        <option value="racing_gasoline">Racing</option>
+                    </select>
                 </div>
             </div>
         </div>
 
+        <!-- ============================================================ -->
         <!-- ACTIONS -->
+        <!-- ============================================================ -->
         <div class="btn-group">
             <button class="btn btn-success" id="tuneBtn" onclick="handleTune()">🔧 Apply Tuning</button>
             <button class="btn btn-warning" id="resetBtn" onclick="handleReset()">🔄 Reset</button>
@@ -462,10 +769,7 @@
 // ================================================================
 // 🔧 KONFIGURASI
 // ================================================================
-// GANTI URL SESUAI DEPLOYAN KAMU
 const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/dasbor_tuning';
-// ATAU PAKAI INI KALO GATEWAY-NYA BEDA:
-// const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/gateway-tune';
 
 let sessionId = null;
 let selectedCarId = null;
@@ -476,6 +780,7 @@ let carList = [];
 // ================================================================
 function getVal(id) { return document.getElementById(id).value; }
 function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
+function getBool(id) { return document.getElementById(id).checked; }
 
 function showToast(msg, type = 'info') {
     const t = document.getElementById('toast');
@@ -490,10 +795,6 @@ function showStatus(id, msg, type = 'info') {
     el.classList.remove('hidden');
     el.className = `status-box ${type}`;
     el.innerHTML = msg;
-}
-
-function hideStatus(id) {
-    document.getElementById(id).classList.add('hidden');
 }
 
 function setLoading(btnId, loading) {
@@ -527,8 +828,7 @@ async function callFunction(step, data) {
         body: JSON.stringify(payload)
     });
 
-    const result = await response.json();
-    return result;
+    return await response.json();
 }
 
 // ================================================================
@@ -570,7 +870,7 @@ async function handleLogin() {
             document.getElementById('totalCarsLabel').textContent = `(${result.total_cars || 0} mobil)`;
 
             renderCarList();
-            showToast('✅ Login sukses! Data mobil realtime!', 'success');
+            showToast('✅ Login sukses!', 'success');
         } else {
             showStatus('loginStatus', `❌ ${result.error || 'Login gagal!'}`, 'error');
             showToast('❌ Login gagal!', 'error');
@@ -623,22 +923,91 @@ function selectCar(carId) {
 }
 
 // ================================================================
-// 🔧 BUILD TUNE CONFIG
+// 🔧 BUILD TUNE CONFIG (LENGKAP)
 // ================================================================
 function buildTuneConfig() {
+    // Kumpulkan body parts yang mau dilepas
+    const removeParts = [];
+    if (getBool('removeBonnet')) removeParts.push('styling_bonnet');
+    if (getBool('removeTrunk')) removeParts.push('styling_trunk');
+    if (getBool('removeDoors')) removeParts.push('styling_doors');
+    if (getBool('removeFrontBumper')) removeParts.push('styling_bumper_front');
+    if (getBool('removeRearBumper')) removeParts.push('styling_bumper_rear');
+    if (getBool('removeSkirts')) removeParts.push('styling_skirts');
+    if (getBool('removeSpoiler')) removeParts.push('styling_spoiler');
+    if (getBool('removeRoof')) removeParts.push('styling_roof');
+    if (getBool('removeMirrors')) removeParts.push('styling_mirrors');
+    if (getBool('removeChassis')) removeParts.push('styling_chassis');
+
+    // Build vinyls jika di-enable
+    let vinyls = [];
+    if (getBool('enableVinyls')) {
+        vinyls.push({
+            id: 'scratch4',
+            angle: 4.546327,
+            group_mask: 1,
+            position: [-0.6663192, 0.5434895, -2.243977],
+            rotation: [0.05988527, 0.2437633, -0.01638305, 0.9678454],
+            scale: [0.5017145, 0.5017145],
+            paints: { "0": { color: getVal('paintColor') || "#A0A199FF" } }
+        });
+    }
+
+    // Build visual
+    let visual = {
+        body_kit: getVal('bodyKitId') || undefined,
+        remove_body_parts: removeParts,
+        vinyls: vinyls,
+        paint_color: getVal('paintColor') || undefined,
+        rim_color: getVal('rimColor') || undefined
+    };
+
+    // Neon
+    if (getBool('enableNeon')) {
+        visual.neon = { front: true, side: true, rear: true };
+    }
+
+    // Exhaust Flame
+    if (getBool('enableFlame')) {
+        visual.exhaust_flame = { back_fire: true, nitro: true };
+    }
+
+    // Window Tint
+    if (getBool('enableTinted')) {
+        visual.window_tint = 80;
+    }
+
+    // Engine Sound
+    const soundMap = {
+        'default': {},
+        'v8': { engine_sound: 'v8_growl' },
+        'v12': { engine_sound: 'v12_scream' },
+        'turbo': { engine_sound: 'turbo_spool' },
+        'electric': { engine_sound: 'electric_whine' }
+    };
+    const engineSound = getVal('engineSound');
+
     return {
         engine: {
+            block: { id: getVal('engineBlockId'), stat_tunes: {} },
+            camshaft: { id: getVal('camshaftId'), stat_tunes: {} },
+            cooling: { id: getVal('coolingId'), stat_tunes: {} },
+            cylinder_head: { id: getVal('cylinderHeadId'), stat_tunes: {} },
             ecu: {
                 id: getVal('ecuId'),
                 stat_tunes: {
                     engine_rev_limit: getNum('revLimit'),
-                    engine_power: getNum('enginePower')
+                    engine_power: getNum('enginePower'),
+                    ...soundMap[engineSound] || {}
                 }
             },
+            exhaust_manifold: { id: getVal('exhaustManifoldId'), stat_tunes: {} },
+            exhaust: { id: getVal('exhaustId'), stat_tunes: {} },
             fuel_system: {
                 id: getVal('fuelSystemId'),
                 stat_tunes: { fuel_flow: getNum('fuelFlow') }
             },
+            intake_manifold: { id: getVal('intakeManifoldId'), stat_tunes: {} },
             turbine: { id: getVal('turbineId'), stat_tunes: {} }
         },
         body: {
@@ -648,15 +1017,30 @@ function buildTuneConfig() {
             },
             weight_reduction: {
                 id: getVal('weightReductionId'),
-                stat_tunes: { weight: getVal('weightReductionId') === 'body_weight_reduction_0' ? 0 : -180 }
-            }
+                stat_tunes: { weight: getNum('weightReduction') }
+            },
+            front_aero: { id: getVal('frontAeroId'), stat_tunes: {} },
+            rear_aero: { id: getVal('rearAeroId'), stat_tunes: {} }
         },
         suspension: {
+            front_springs: { id: getVal('frontSpringsId'), stat_tunes: {} },
+            rear_springs: { id: getVal('rearSpringsId'), stat_tunes: {} },
+            front_shocks: { id: getVal('frontShocksId'), stat_tunes: {} },
+            rear_shocks: { id: getVal('rearShocksId'), stat_tunes: {} },
+            front_stabs: { id: getVal('frontStabsId'), stat_tunes: {} },
+            rear_stabs: { id: getVal('rearStabsId'), stat_tunes: {} },
             front_arms: {
                 id: getVal('frontArmsId'),
                 stat_tunes: {
                     suspension_front_camber: { value: getNum('frontCamber') },
                     suspension_front_toe: { value: getNum('frontToe') }
+                }
+            },
+            rear_arms: {
+                id: getVal('rearArmsId'),
+                stat_tunes: {
+                    suspension_rear_camber: { value: getNum('rearCamber') },
+                    suspension_rear_toe: { value: getNum('rearToe') }
                 }
             },
             brakes: {
@@ -666,15 +1050,24 @@ function buildTuneConfig() {
         },
         wheels: {
             front_rim: { id: getVal('frontRimId'), stat_tunes: {} },
-            rear_rim: { id: getVal('rearRimId'), stat_tunes: {} }
+            rear_rim: { id: getVal('rearRimId'), stat_tunes: {} },
+            front_tire: { id: getVal('frontTireId'), stat_tunes: {} },
+            rear_tire: { id: getVal('rearTireId'), stat_tunes: {} },
+            front_spacers: { id: `wheel_spacers_front_${getNum('frontSpacers')/5 || 0}`, stat_tunes: {} },
+            rear_spacers: { id: `wheel_spacers_rear_${getNum('rearSpacers')/5 || 0}`, stat_tunes: {} }
         },
         resources: {
-            gasoline: { amount: getNum('gasolineAmount'), max: 40 },
-            nitro: { amount: getNum('nitroAmount'), max: 20 }
+            gasoline: {
+                amount: getNum('gasolineAmount'),
+                max: 40,
+                type: getVal('gasolineType')
+            },
+            nitro: {
+                amount: getNum('nitroAmount'),
+                max: 20
+            }
         },
-        visual: {
-            body_kit: getVal('bodyKitId') || undefined
-        }
+        visual: visual
     };
 }
 
@@ -686,7 +1079,7 @@ async function handleTune() {
     if (!selectedCarId) { showToast('⚠️ Pilih mobil dulu!', 'error'); return; }
 
     const tuneConfig = buildTuneConfig();
-    showStatus('tuningStatus', '⏳ Proses tuning...', 'info');
+    showStatus('tuningStatus', '⏳ Proses tuning...\n' + JSON.stringify(tuneConfig, null, 2).substring(0, 500) + '...', 'info');
     setLoading('tuneBtn', true);
 
     try {
@@ -699,7 +1092,6 @@ async function handleTune() {
         if (result.status === 'success') {
             showStatus('tuningStatus', `✅ ${result.message || 'Tuning sukses!'}`, 'success');
             showToast('✅ Tuning berhasil!', 'success');
-            // Refresh data mobil
             setTimeout(() => handleLogin(), 1500);
         } else {
             showStatus('tuningStatus', `❌ ${result.error || 'Tuning gagal!'}`, 'error');
@@ -771,7 +1163,7 @@ async function handleGetStructure() {
             let html = `<strong>🚗 ${structure.desc_id || 'Unknown'}</strong>\n`;
             html += `🎨 Body Kit: ${structure.body_kit || 'None'}\n\n`;
 
-            const cellNames = { '0': 'Engine', '1': 'Body/Chassis', '2': 'Transmission', '3': 'Suspension', '4': 'Wheels' };
+            const cellNames = { '0': 'Engine', '1': 'Body/Chassis', '2': 'Transmission', '3': 'Suspension', '4': 'Wheels', '5': 'Visual/Styling' };
             
             for (const [key, cell] of Object.entries(cells)) {
                 html += `📂 Cell ${key}: ${cellNames[key] || cell.name || 'Unknown'}\n`;
@@ -819,6 +1211,5 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
-
 </body>
 </html>
