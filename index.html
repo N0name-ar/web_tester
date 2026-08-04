@@ -1,1215 +1,249 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏎️ CarX Full Tuning Tester</title>
-    <style>
-        /* ============================================================== */
-        /* STYLE - DARK THEME */
-        /* ============================================================== */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container { max-width: 1200px; margin: 0 auto; }
-        .header { text-align: center; padding: 20px 0 30px; }
-        .header h1 {
-            font-size: 2.5em;
-            background: linear-gradient(45deg, #f093fb, #f5576c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .header p { color: #888; margin-top: 5px; font-size: 0.9em; }
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-        .card {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 20px 25px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .card-title {
-            font-size: 1.1em;
-            margin-bottom: 15px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .card-title.engine { color: #f5576c; }
-        .card-title.body { color: #f093fb; }
-        .card-title.suspension { color: #f6d365; }
-        .card-title.wheels { color: #00f2fe; }
-        .card-title.resources { color: #00c853; }
-        .card-title.visual { color: #ff6b9d; }
+const BASE_TEMP_MAIL = "https://api.internal.temp-mail.io/api/v3";
+const TEMP_HEADERS = {
+  "Content-Type": "application/json; charset=UTF-8",
+  "User-Agent": "okhttp/4.12.0",
+  "Host": "api.internal.temp-mail.io",
+};
 
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        .form-group label {
-            font-size: 0.75em;
-            color: #aaa;
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
-        .form-group input, .form-group select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.07);
-            color: #fff;
-            font-size: 13px;
-            transition: all 0.3s;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #f093fb;
-            box-shadow: 0 0 20px rgba(240, 147, 251, 0.15);
-        }
-        .form-group input::placeholder { color: #666; }
-        .form-group input[type="number"] { -moz-appearance: textfield; }
-        .form-group input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-vip-signature, x-copyright-check",
+};
 
-        .btn {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-        .btn-block { width: 100%; }
-        .btn-primary { background: linear-gradient(45deg, #f093fb, #f5576c); color: #fff; }
-        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245, 87, 108, 0.3); }
-        .btn-success { background: linear-gradient(45deg, #4facfe, #00f2fe); color: #fff; }
-        .btn-success:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(79, 172, 254, 0.3); }
-        .btn-danger { background: linear-gradient(45deg, #f093fb, #f5576c); color: #fff; }
-        .btn-warning { background: linear-gradient(45deg, #f6d365, #fda085); color: #333; }
-        .btn-warning:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(253, 160, 133, 0.3); }
-        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff; }
-        .btn-outline:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
-        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+Deno.serve(async (req) => {
+  // Handle Preflight Request CORS
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
-        .hidden { display: none !important; }
-        .mt-10 { margin-top: 10px; }
-        .mb-10 { margin-bottom: 10px; }
-        .text-muted { color: #888; font-size: 0.85em; }
-
-        /* CAR LIST */
-        .car-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 8px;
-            max-height: 300px;
-            overflow-y: auto;
-            padding: 4px;
-        }
-        .car-list::-webkit-scrollbar { width: 4px; }
-        .car-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 10px; }
-        .car-list::-webkit-scrollbar-thumb { background: #f093fb; border-radius: 10px; }
-
-        .car-item {
-            background: rgba(255,255,255,0.05);
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-        }
-        .car-item:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
-        .car-item.selected { border-color: #f093fb; background: rgba(240, 147, 251, 0.15); }
-        .car-item .status { font-size: 0.7em; padding: 2px 8px; border-radius: 12px; background: rgba(255,255,255,0.1); }
-        .car-item .status.tuned { background: #00f2fe; color: #000; }
-
-        .tune-section {
-            background: rgba(255,255,255,0.03);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-left: 3px solid #4facfe;
-        }
-        .tune-section .label {
-            font-weight: 600;
-            font-size: 0.85em;
-            margin-bottom: 8px;
-        }
-        .label-engine { color: #f5576c; }
-        .label-body { color: #f093fb; }
-        .label-suspension { color: #f6d365; }
-        .label-wheels { color: #00f2fe; }
-        .label-resources { color: #00c853; }
-        .label-visual { color: #ff6b9d; }
-
-        .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 5px 0 10px;
-        }
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.8em;
-            color: #ccc;
-            cursor: pointer;
-        }
-        .checkbox-group input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: #f093fb;
-            cursor: pointer;
-        }
-
-        .status-box {
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-top: 10px;
-            font-size: 13px;
-            white-space: pre-wrap;
-            word-break: break-all;
-            max-height: 400px;
-            overflow: auto;
-        }
-        .status-box.success { background: rgba(0,200,83,0.12); border: 1px solid rgba(0,200,83,0.3); }
-        .status-box.error { background: rgba(213,0,0,0.12); border: 1px solid rgba(213,0,0,0.3); }
-        .status-box.info { background: rgba(41,121,255,0.12); border: 1px solid rgba(41,121,255,0.3); }
-        .status-box pre { margin: 0; font-size: 12px; color: #ccc; }
-
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            padding: 14px 24px;
-            border-radius: 12px;
-            background: #333;
-            color: #fff;
-            transform: translateY(120px);
-            opacity: 0;
-            transition: all 0.5s;
-            z-index: 1000;
-            max-width: 400px;
-            font-size: 14px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
-        .toast.show { transform: translateY(0); opacity: 1; }
-        .toast.success { background: #00c853; }
-        .toast.error { background: #d50000; }
-        .toast.info { background: #2979ff; }
-
-        .loading {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 3px solid rgba(255,255,255,0.2);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 768px) {
-            .form-row { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-
-    <!-- ============================================================ -->
-    <!-- HEADER -->
-    <!-- ============================================================ -->
-    <div class="header">
-        <h1>🏎️ CarX Full Tuning Tester</h1>
-        <p>🔧 Bebas berkreasi — Body lepas, Ban Donat, Jangkung, Suara Engine, Sensor Rem!</p>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- LOGIN SECTION -->
-    <!-- ============================================================ -->
-    <div class="card" id="loginSection">
-        <div class="card-title" style="color:#f093fb;">🔐 Login Akun</div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>📧 Email</label>
-                <input type="email" id="loginEmail" placeholder="email@gmail.com">
-            </div>
-            <div class="form-group">
-                <label>🔑 Password</label>
-                <input type="password" id="loginPassword" placeholder="Password">
-            </div>
-            <div class="form-group">
-                <label>🎫 VIP Key</label>
-                <input type="text" id="vipKey" placeholder="VIP Key (opsional)" value="TEST_KEY_123">
-            </div>
-        </div>
-        <button class="btn btn-primary btn-block" id="loginBtn" onclick="handleLogin()">🚀 Login & Ambil Data</button>
-        <div id="loginStatus" class="hidden status-box"></div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- CAR LIST SECTION -->
-    <!-- ============================================================ -->
-    <div class="card hidden" id="carListSection">
-        <div class="card-title" style="color:#4facfe;">🏎️ Garasi Mobil <span class="text-muted" id="totalCarsLabel"></span></div>
-        <div id="carListContainer" class="car-list"></div>
-        <div class="mt-10 text-muted" style="display:flex;gap:15px;flex-wrap:wrap;">
-            <span>Session: <strong id="sessionIdDisplay">-</strong></span>
-            <span>Nick: <strong id="nickDisplay">-</strong></span>
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- FULL TUNING SECTION -->
-    <!-- ============================================================ -->
-    <div class="card hidden" id="tuningSection">
-        <div class="card-title" style="color:#f093fb;">🔧 Full Tuning Config</div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>🚗 Mobil Terpilih</label>
-                <input type="text" id="selectedCar" readonly placeholder="Pilih mobil dulu" style="background:rgba(255,255,255,0.05);">
-            </div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- 1. ENGINE - MESIN -->
-        <!-- ============================================================ -->
-        <div class="tune-section">
-            <div class="label label-engine">⚙️ ENGINE / MESIN</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>ECU ID</label>
-                    <select id="ecuId">
-                        <option value="engine_ecu_stock">Stock</option>
-                        <option value="engine_ecu_sport">Sport</option>
-                        <option value="engine_ecu_race" selected>Race</option>
-                        <option value="engine_ecu_pro">Pro</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Rev Limit (RPM)</label>
-                    <input type="number" id="revLimit" value="8500" min="4000" max="12000">
-                </div>
-                <div class="form-group">
-                    <label>Engine Power (HP)</label>
-                    <input type="number" id="enginePower" value="180" min="50" max="500">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Fuel System</label>
-                    <select id="fuelSystemId">
-                        <option value="engine_fuel_system_stock">Stock</option>
-                        <option value="engine_fuel_system_sport">Sport</option>
-                        <option value="engine_fuel_system_race" selected>Race</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Fuel Flow</label>
-                    <input type="number" id="fuelFlow" value="150" min="50" max="300">
-                </div>
-                <div class="form-group">
-                    <label>Turbine</label>
-                    <select id="turbineId">
-                        <option value="engine_turbine_stock1">Stock</option>
-                        <option value="engine_turbine_sport">Sport</option>
-                        <option value="engine_turbine_race" selected>Race</option>
-                        <option value="engine_turbine_pro">Pro</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Engine Block</label>
-                    <select id="engineBlockId">
-                        <option value="engine_block_stock">Stock</option>
-                        <option value="engine_block_sport">Sport</option>
-                        <option value="engine_block_race" selected>Race</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Camshaft</label>
-                    <select id="camshaftId">
-                        <option value="engine_camshaft_stock">Stock</option>
-                        <option value="engine_camshaft_sport">Sport</option>
-                        <option value="engine_camshaft_race" selected>Race</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Cooling System</label>
-                    <select id="coolingId">
-                        <option value="engine_cooling_stock">Stock</option>
-                        <option value="engine_cooling_sport">Sport</option>
-                        <option value="engine_cooling_race" selected>Race</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Cylinder Head</label>
-                    <select id="cylinderHeadId">
-                        <option value="engine_cylinder_head_stock">Stock</option>
-                        <option value="engine_cylinder_head_sport">Sport</option>
-                        <option value="engine_cylinder_head_race" selected>Race</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Exhaust Manifold</label>
-                    <select id="exhaustManifoldId">
-                        <option value="engine_exhaust_manifold_stock">Stock</option>
-                        <option value="engine_exhaust_manifold_sport">Sport</option>
-                        <option value="engine_exhaust_manifold_race" selected>Race</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Exhaust System</label>
-                    <select id="exhaustId">
-                        <option value="engine_exhaust_stock">Stock</option>
-                        <option value="engine_exhaust_sport">Sport</option>
-                        <option value="engine_exhaust_race" selected>Race</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Intake Manifold</label>
-                    <select id="intakeManifoldId">
-                        <option value="engine_intake_manifold_stock">Stock</option>
-                        <option value="engine_intake_manifold_sport">Sport</option>
-                        <option value="engine_intake_manifold_race" selected>Race</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>🔊 Suara Engine</label>
-                    <select id="engineSound">
-                        <option value="default">Default</option>
-                        <option value="v8">V8 Growl</option>
-                        <option value="v12">V12 Scream</option>
-                        <option value="turbo">Turbo Spool</option>
-                        <option value="electric">Electric</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- 2. BODY / CHASSIS - SASIS -->
-        <!-- ============================================================ -->
-        <div class="tune-section">
-            <div class="label label-body">🏗️ BODY / CHASSIS - SASIS</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Chassis Strengthening</label>
-                    <select id="chassisId">
-                        <option value="body_strengthening_0">Stock</option>
-                        <option value="body_strengthening_sport">Sport</option>
-                        <option value="body_strengthening_race" selected>Race</option>
-                        <option value="body_strengthening_pro">Pro</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Chassis Rigidity</label>
-                    <input type="number" id="chassisRigidity" value="120" min="50" max="250">
-                </div>
-                <div class="form-group">
-                    <label>Weight Reduction</label>
-                    <select id="weightReductionId">
-                        <option value="body_weight_reduction_0">Stock</option>
-                        <option value="body_weight_reduction_1">Lv.1</option>
-                        <option value="body_weight_reduction_2">Lv.2</option>
-                        <option value="body_weight_reduction_3" selected>Lv.3</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Weight (kg)</label>
-                    <input type="number" id="weightReduction" value="-180" min="-400" max="0">
-                </div>
-                <div class="form-group">
-                    <label>Front Aero</label>
-                    <select id="frontAeroId">
-                        <option value="body_front_aero_0">Stock</option>
-                        <option value="body_front_aero_1">Lv.1</option>
-                        <option value="body_front_aero_2">Lv.2</option>
-                        <option value="body_front_aero_3" selected>Lv.3</option>
-                        <option value="body_front_aero_4">Lv.4</option>
-                        <option value="body_front_aero_5">Lv.5</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Rear Aero</label>
-                    <select id="rearAeroId">
-                        <option value="body_rear_aero_0">Stock</option>
-                        <option value="body_rear_aero_1">Lv.1</option>
-                        <option value="body_rear_aero_2">Lv.2</option>
-                        <option value="body_rear_aero_3" selected>Lv.3</option>
-                        <option value="body_rear_aero_4">Lv.4</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- 3. SUSPENSION -->
-        <!-- ============================================================ -->
-        <div class="tune-section">
-            <div class="label label-suspension">🔧 SUSPENSION - SENSOR REM & BAN</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Front Arms</label>
-                    <select id="frontArmsId">
-                        <option value="suspension_arms_front_1">Lv.1</option>
-                        <option value="suspension_arms_front_2">Lv.2</option>
-                        <option value="suspension_arms_front_3" selected>Lv.3</option>
-                        <option value="suspension_arms_front_4">Lv.4</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Front Camber</label>
-                    <input type="number" id="frontCamber" value="-3.0" step="0.1" min="-8" max="0">
-                </div>
-                <div class="form-group">
-                    <label>Front Toe</label>
-                    <input type="number" id="frontToe" value="0.5" step="0.1" min="-2" max="2">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Rear Arms</label>
-                    <select id="rearArmsId">
-                        <option value="suspension_arms_rear_1">Lv.1</option>
-                        <option value="suspension_arms_rear_2" selected>Lv.2</option>
-                        <option value="suspension_arms_rear_3">Lv.3</option>
-                        <option value="suspension_arms_rear_4">Lv.4</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Rear Camber</label>
-                    <input type="number" id="rearCamber" value="-2.5" step="0.1" min="-8" max="0">
-                </div>
-                <div class="form-group">
-                    <label>Rear Toe</label>
-                    <input type="number" id="rearToe" value="0.3" step="0.1" min="-2" max="2">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Front Springs</label>
-                    <select id="frontSpringsId">
-                        <option value="suspension_springs_front_1">Lv.1</option>
-                        <option value="suspension_springs_front_2" selected>Lv.2</option>
-                        <option value="suspension_springs_front_3">Lv.3</option>
-                        <option value="suspension_springs_front_4">Lv.4</option>
-                        <option value="suspension_springs_front_5">Lv.5</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Rear Springs</label>
-                    <select id="rearSpringsId">
-                        <option value="suspension_springs_rear_1">Lv.1</option>
-                        <option value="suspension_springs_rear_2" selected>Lv.2</option>
-                        <option value="suspension_springs_rear_3">Lv.3</option>
-                        <option value="suspension_springs_rear_4">Lv.4</option>
-                        <option value="suspension_springs_rear_5">Lv.5</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Front Shocks</label>
-                    <select id="frontShocksId">
-                        <option value="suspension_shocks_front_stock">Stock</option>
-                        <option value="suspension_shocks_front_1">Lv.1</option>
-                        <option value="suspension_shocks_front_2">Lv.2</option>
-                        <option value="suspension_shocks_front_3" selected>Lv.3</option>
-                        <option value="suspension_shocks_front_4">Lv.4</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Rear Shocks</label>
-                    <select id="rearShocksId">
-                        <option value="suspension_shocks_rear_stock">Stock</option>
-                        <option value="suspension_shocks_rear_1">Lv.1</option>
-                        <option value="suspension_shocks_rear_2">Lv.2</option>
-                        <option value="suspension_shocks_rear_3" selected>Lv.3</option>
-                        <option value="suspension_shocks_rear_4">Lv.4</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Front Stabilizers</label>
-                    <select id="frontStabsId">
-                        <option value="suspension_stabs_front_stock">Stock</option>
-                        <option value="suspension_stabs_front_1">Lv.1</option>
-                        <option value="suspension_stabs_front_2">Lv.2</option>
-                        <option value="suspension_stabs_front_3" selected>Lv.3</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Rear Stabilizers</label>
-                    <select id="rearStabsId">
-                        <option value="suspension_stabs_rear_stock">Stock</option>
-                        <option value="suspension_stabs_rear_1">Lv.1</option>
-                        <option value="suspension_stabs_rear_2">Lv.2</option>
-                        <option value="suspension_stabs_rear_3" selected>Lv.3</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>🛞 Brakes (Sensor Rem)</label>
-                    <select id="brakesId">
-                        <option value="suspension_brakes_stock">Stock</option>
-                        <option value="suspension_brakes_sport">Sport</option>
-                        <option value="suspension_brakes_race" selected>Race</option>
-                        <option value="suspension_brakes_pro">Pro</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Brake Power</label>
-                    <input type="number" id="brakePower" value="150" min="50" max="350">
-                </div>
-            </div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- 4. WHEELS - BAN -->
-        <!-- ============================================================ -->
-        <div class="tune-section">
-            <div class="label label-wheels">🛞 WHEELS - BAN & RIM</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Front Rim Size</label>
-                    <select id="frontRimId">
-                        <option value="wheel_rim_front_15">15"</option>
-                        <option value="wheel_rim_front_16">16"</option>
-                        <option value="wheel_rim_front_17">17"</option>
-                        <option value="wheel_rim_front_18">18"</option>
-                        <option value="wheel_rim_front_19">19"</option>
-                        <option value="wheel_rim_front_20">20"</option>
-                        <option value="wheel_rim_front_21">21"</option>
-                        <option value="wheel_rim_front_22" selected>22"</option>
-                        <option value="wheel_rim_front_24">24"</option>
-                        <option value="wheel_rim_front_26">26"</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Rear Rim Size</label>
-                    <select id="rearRimId">
-                        <option value="wheel_rim_rear_15">15"</option>
-                        <option value="wheel_rim_rear_16">16"</option>
-                        <option value="wheel_rim_rear_17">17"</option>
-                        <option value="wheel_rim_rear_18">18"</option>
-                        <option value="wheel_rim_rear_19">19"</option>
-                        <option value="wheel_rim_rear_20">20"</option>
-                        <option value="wheel_rim_rear_21">21"</option>
-                        <option value="wheel_rim_rear_22" selected>22"</option>
-                        <option value="wheel_rim_rear_24">24"</option>
-                        <option value="wheel_rim_rear_26">26"</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Front Tire</label>
-                    <select id="frontTireId">
-                        <option value="wheel_tire_front_low">Low Profile</option>
-                        <option value="wheel_tire_front_medium" selected>Medium</option>
-                        <option value="wheel_tire_front_high">High</option>
-                        <option value="wheel_tire_front_offroad">Offroad</option>
-                        <option value="wheel_tire_front_donut">🍩 Donut</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Rear Tire</label>
-                    <select id="rearTireId">
-                        <option value="wheel_tire_rear_low">Low Profile</option>
-                        <option value="wheel_tire_rear_medium" selected>Medium</option>
-                        <option value="wheel_tire_rear_high">High</option>
-                        <option value="wheel_tire_rear_offroad">Offroad</option>
-                        <option value="wheel_tire_rear_donut">🍩 Donut</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Front Spacers (mm)</label>
-                    <input type="number" id="frontSpacers" value="0" min="0" max="50" step="5">
-                </div>
-                <div class="form-group">
-                    <label>Rear Spacers (mm)</label>
-                    <input type="number" id="rearSpacers" value="0" min="0" max="50" step="5">
-                </div>
-                <div class="form-group">
-                    <label>Tire Pressure (PSI)</label>
-                    <input type="number" id="tirePressure" value="32" min="10" max="60">
-                </div>
-            </div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- 5. VISUAL TUNING - BODY LEPAS & STYLING -->
-        <!-- ============================================================ -->
-        <div class="tune-section">
-            <div class="label label-visual">🎨 VISUAL TUNING - BODY LEPAS & STYLING</div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Body Kit ID</label>
-                    <input type="text" id="bodyKitId" placeholder="contoh: lexusrcf_cbw_bkit" value="lexusrcf_cbw_bkit">
-                </div>
-            </div>
-
-            <div style="margin:10px 0 5px;font-size:0.85em;color:#ff6b9d;font-weight:600;">🔴 CENTANG UNTUK COpot BODY:</div>
-            <div class="checkbox-group">
-                <label><input type="checkbox" id="removeBonnet"> Bonnet</label>
-                <label><input type="checkbox" id="removeTrunk"> Trunk</label>
-                <label><input type="checkbox" id="removeDoors"> Doors</label>
-                <label><input type="checkbox" id="removeFrontBumper"> Front Bumper</label>
-                <label><input type="checkbox" id="removeRearBumper"> Rear Bumper</label>
-                <label><input type="checkbox" id="removeSkirts"> Skirts</label>
-                <label><input type="checkbox" id="removeSpoiler"> Spoiler</label>
-                <label><input type="checkbox" id="removeRoof"> Roof</label>
-                <label><input type="checkbox" id="removeMirrors"> Mirrors</label>
-                <label><input type="checkbox" id="removeChassis"> Chassis</label>
-            </div>
-
-            <div style="margin:10px 0 5px;font-size:0.85em;color:#00f2fe;font-weight:600;">🔵 STYLING:</div>
-            <div class="checkbox-group">
-                <label><input type="checkbox" id="enableVinyls"> Tambah Vinyls</label>
-                <label><input type="checkbox" id="enableNeon"> Neon</label>
-                <label><input type="checkbox" id="enableFlame"> Exhaust Flame</label>
-                <label><input type="checkbox" id="enableTinted"> Window Tint</label>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Paint Color (Hex)</label>
-                    <input type="text" id="paintColor" placeholder="#FF0000" value="#F093FB">
-                </div>
-                <div class="form-group">
-                    <label>Rim Color (Hex)</label>
-                    <input type="text" id="rimColor" placeholder="#FFFFFF" value="#FFFFFF">
-                </div>
-            </div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- 6. RESOURCES -->
-        <!-- ============================================================ -->
-        <div class="tune-section">
-            <div class="label label-resources">⛽ RESOURCES - BENSIN & NITRO</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Bensin (0-40)</label>
-                    <input type="number" id="gasolineAmount" value="40" min="0" max="40">
-                </div>
-                <div class="form-group">
-                    <label>Nitro (0-20)</label>
-                    <input type="number" id="nitroAmount" value="20" min="0" max="20">
-                </div>
-                <div class="form-group">
-                    <label>Gasoline Type</label>
-                    <select id="gasolineType">
-                        <option value="simple_gasoline">Regular</option>
-                        <option value="sports_gasoline" selected>Sport</option>
-                        <option value="racing_gasoline">Racing</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- ACTIONS -->
-        <!-- ============================================================ -->
-        <div class="btn-group">
-            <button class="btn btn-success" id="tuneBtn" onclick="handleTune()">🔧 Apply Tuning</button>
-            <button class="btn btn-warning" id="resetBtn" onclick="handleReset()">🔄 Reset</button>
-            <button class="btn btn-outline" id="structBtn" onclick="handleGetStructure()">🔍 Cek Struktur</button>
-        </div>
-        <div id="tuningStatus" class="hidden status-box"></div>
-    </div>
-
-</div>
-
-<!-- ============================================================ -->
-<!-- TOAST -->
-<!-- ============================================================ -->
-<div id="toast" class="toast"></div>
-
-<!-- ============================================================ -->
-<!-- SCRIPT -->
-<!-- ============================================================ -->
-<script>
-// ================================================================
-// 🔧 KONFIGURASI
-// ================================================================
-const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/dasbor_tuning';
-
-let sessionId = null;
-let selectedCarId = null;
-let carList = [];
-
-// ================================================================
-// 🛠️ HELPER
-// ================================================================
-function getVal(id) { return document.getElementById(id).value; }
-function getNum(id) { return parseFloat(document.getElementById(id).value) || 0; }
-function getBool(id) { return document.getElementById(id).checked; }
-
-function showToast(msg, type = 'info') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = `toast ${type}`;
-    setTimeout(() => t.classList.add('show'), 100);
-    setTimeout(() => t.classList.remove('show'), 4000);
-}
-
-function showStatus(id, msg, type = 'info') {
-    const el = document.getElementById(id);
-    el.classList.remove('hidden');
-    el.className = `status-box ${type}`;
-    el.innerHTML = msg;
-}
-
-function setLoading(btnId, loading) {
-    const btn = document.getElementById(btnId);
-    if (loading) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="loading"></span> Processing...';
-    } else {
-        btn.disabled = false;
-        btn.innerHTML = btn.dataset.original || 'Submit';
+  try {
+    // 🔑 CHECK HEADER KEAMANAN
+    const KUNCI_HEADER_AMAN = req.headers.get("X-Copyright-Check");
+    if (KUNCI_HEADER_AMAN !== "titik-temu-cloud-secured-v25-key-auth") {
+      return new Response(
+        JSON.stringify({ success: false, error: "❌ Akses Ilegal!" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
     }
-}
 
-// ================================================================
-// 📡 API CALL
-// ================================================================
-async function callFunction(step, data) {
-    const payload = {
-        step: step,
-        vip_key: getVal('vipKey') || 'TEST_KEY_123',
-        hwid: 'WEB_TESTER',
-        ...data
-    };
+    // 🔑 INITIALIZE SUPABASE CLIENT
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const response = await fetch(GATEWAY_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth'
-        },
-        body: JSON.stringify(payload)
-    });
+    // Query ke tabel vault_sultan
+    const { data: vaultData, error: vaultError } = await supabase
+      .from("vault_sultan")
+      .select("SULTAN_MAIN")
+      .eq("id", 1)
+      .single();
 
-    return await response.json();
-}
+    if (vaultError || !vaultData || !vaultData.SULTAN_MAIN) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `CRITICAL: Gagal membaca tabel 'vault_sultan'! Detail: ${vaultError?.message || "Data kosong"}`,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
 
-// ================================================================
-// 🚀 LOGIN
-// ================================================================
-async function handleLogin() {
-    const email = getVal('loginEmail');
-    const pass = getVal('loginPassword');
+    const MASTER_COMPRESDATA_BASE64 = vaultData.SULTAN_MAIN;
+
+    // Parse Payload Input
+    const { custom_name, password, silver, gold, exp, vip_key } = await req.json();
+
+    if (!custom_name || !password) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Nama Depan dan Password wajib diisi, Wak!" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    // ================= 2. GENERATE DISPOSABLE TEMP-MAIL =================
+    const domainRes = await fetch(`${BASE_TEMP_MAIL}/domains`, { headers: TEMP_HEADERS });
+    if (!domainRes.ok) throw new Error("Gagal mengambil active domains dari Temp-Mail API.");
     
-    if (!email || !pass) {
-        showToast('⚠️ Email dan Password wajib diisi!', 'error');
-        return;
-    }
+    const domainData = await domainRes.json();
+    const domains = domainData.domains || [];
+    if (domains.length === 0) throw new Error("Tidak ada domain publik yang tersedia di Temp-Mail.");
 
-    showStatus('loginStatus', '⏳ Login ke server CarX...', 'info');
-    setLoading('loginBtn', true);
+    const randomDomain = domains[Math.floor(Math.random() * domains.length)].name;
+    const randomBack = Math.random().toString(36).substring(2, 8);
+    const cleanCustomName = custom_name.replace(/[^a-zA-Z0-9]/g, "");
+    const username = `${cleanCustomName}_${randomBack}`;
+    const emailAddr = `${username}@${randomDomain}`;
 
-    try {
-        const result = await callFunction('login_and_get_profile', {
-            user: email,
-            pass: pass
-        });
+    const createEmailRes = await fetch(`${BASE_TEMP_MAIL}/email/new`, {
+      method: "POST",
+      headers: TEMP_HEADERS,
+      body: JSON.stringify({ domain: randomDomain, name: username }),
+    });
+    if (!createEmailRes.ok) throw new Error("Gagal mengalokasikan mailbox baru di Temp-Mail.");
 
-        if (result.status === 'success') {
-            sessionId = result.session_id;
-            carList = result.cars || [];
-            
-            showStatus('loginStatus', `
-✅ <strong>Login SUKSES!</strong>
-👤 Nickname: ${result.nickname || '-'}
-🏎️ Total Mobil: ${result.total_cars || 0}
-📱 Session: ${sessionId}
-            `, 'success');
-
-            document.getElementById('carListSection').classList.remove('hidden');
-            document.getElementById('tuningSection').classList.remove('hidden');
-            document.getElementById('sessionIdDisplay').textContent = sessionId;
-            document.getElementById('nickDisplay').textContent = result.nickname || '-';
-            document.getElementById('totalCarsLabel').textContent = `(${result.total_cars || 0} mobil)`;
-
-            renderCarList();
-            showToast('✅ Login sukses!', 'success');
-        } else {
-            showStatus('loginStatus', `❌ ${result.error || 'Login gagal!'}`, 'error');
-            showToast('❌ Login gagal!', 'error');
-        }
-    } catch (err) {
-        showStatus('loginStatus', `❌ Error: ${err.message}`, 'error');
-        showToast('❌ Error koneksi!', 'error');
-    }
-    setLoading('loginBtn', false);
-}
-
-// ================================================================
-// 🏎️ RENDER CAR LIST
-// ================================================================
-function renderCarList() {
-    const container = document.getElementById('carListContainer');
-    container.innerHTML = '';
-
-    if (!carList || carList.length === 0) {
-        container.innerHTML = '<div class="text-muted" style="padding:10px;">Tidak ada mobil di garasi</div>';
-        return;
-    }
-
-    carList.forEach(car => {
-        const div = document.createElement('div');
-        div.className = `car-item${selectedCarId === car.id ? ' selected' : ''}`;
-        div.innerHTML = `
-            <span>${car.name}</span>
-            <span class="status${car.has_tuning ? ' tuned' : ''}">
-                ${car.has_tuning ? '✅' : '❌'}
-            </span>
-        `;
-        div.onclick = () => selectCar(car.id);
-        container.appendChild(div);
+    // ================= 3. REGISTER HANDSHAKE KE CARX SERVER =================
+    const devId = crypto.randomUUID();
+    const uId = crypto.randomUUID().replace(/-/g, "").substring(0, 32);
+    const regUrl = "https://carx-id-prod.carx-online.com/api/auth/register";
+    
+    const regBody = new URLSearchParams({
+      deviceId: devId,
+      deviceUniqueId: uId,
+      username: emailAddr,
+      password: password,
+      project: "STREET",
     });
 
-    if (!selectedCarId && carList.length > 0) {
-        selectCar(carList[0].id);
-    }
-}
-
-function selectCar(carId) {
-    selectedCarId = carId;
-    const car = carList.find(c => c.id === carId);
-    if (car) {
-        document.getElementById('selectedCar').value = `${car.name} (ID: ${car.id})`;
-        renderCarList();
-        showToast(`🚗 ${car.name} dipilih!`, 'info');
-    }
-}
-
-// ================================================================
-// 🔧 BUILD TUNE CONFIG (LENGKAP)
-// ================================================================
-function buildTuneConfig() {
-    // Kumpulkan body parts yang mau dilepas
-    const removeParts = [];
-    if (getBool('removeBonnet')) removeParts.push('styling_bonnet');
-    if (getBool('removeTrunk')) removeParts.push('styling_trunk');
-    if (getBool('removeDoors')) removeParts.push('styling_doors');
-    if (getBool('removeFrontBumper')) removeParts.push('styling_bumper_front');
-    if (getBool('removeRearBumper')) removeParts.push('styling_bumper_rear');
-    if (getBool('removeSkirts')) removeParts.push('styling_skirts');
-    if (getBool('removeSpoiler')) removeParts.push('styling_spoiler');
-    if (getBool('removeRoof')) removeParts.push('styling_roof');
-    if (getBool('removeMirrors')) removeParts.push('styling_mirrors');
-    if (getBool('removeChassis')) removeParts.push('styling_chassis');
-
-    // Build vinyls jika di-enable
-    let vinyls = [];
-    if (getBool('enableVinyls')) {
-        vinyls.push({
-            id: 'scratch4',
-            angle: 4.546327,
-            group_mask: 1,
-            position: [-0.6663192, 0.5434895, -2.243977],
-            rotation: [0.05988527, 0.2437633, -0.01638305, 0.9678454],
-            scale: [0.5017145, 0.5017145],
-            paints: { "0": { color: getVal('paintColor') || "#A0A199FF" } }
-        });
-    }
-
-    // Build visual
-    let visual = {
-        body_kit: getVal('bodyKitId') || undefined,
-        remove_body_parts: removeParts,
-        vinyls: vinyls,
-        paint_color: getVal('paintColor') || undefined,
-        rim_color: getVal('rimColor') || undefined
-    };
-
-    // Neon
-    if (getBool('enableNeon')) {
-        visual.neon = { front: true, side: true, rear: true };
-    }
-
-    // Exhaust Flame
-    if (getBool('enableFlame')) {
-        visual.exhaust_flame = { back_fire: true, nitro: true };
-    }
-
-    // Window Tint
-    if (getBool('enableTinted')) {
-        visual.window_tint = 80;
-    }
-
-    // Engine Sound
-    const soundMap = {
-        'default': {},
-        'v8': { engine_sound: 'v8_growl' },
-        'v12': { engine_sound: 'v12_scream' },
-        'turbo': { engine_sound: 'turbo_spool' },
-        'electric': { engine_sound: 'electric_whine' }
-    };
-    const engineSound = getVal('engineSound');
-
-    return {
-        engine: {
-            block: { id: getVal('engineBlockId'), stat_tunes: {} },
-            camshaft: { id: getVal('camshaftId'), stat_tunes: {} },
-            cooling: { id: getVal('coolingId'), stat_tunes: {} },
-            cylinder_head: { id: getVal('cylinderHeadId'), stat_tunes: {} },
-            ecu: {
-                id: getVal('ecuId'),
-                stat_tunes: {
-                    engine_rev_limit: getNum('revLimit'),
-                    engine_power: getNum('enginePower'),
-                    ...soundMap[engineSound] || {}
-                }
-            },
-            exhaust_manifold: { id: getVal('exhaustManifoldId'), stat_tunes: {} },
-            exhaust: { id: getVal('exhaustId'), stat_tunes: {} },
-            fuel_system: {
-                id: getVal('fuelSystemId'),
-                stat_tunes: { fuel_flow: getNum('fuelFlow') }
-            },
-            intake_manifold: { id: getVal('intakeManifoldId'), stat_tunes: {} },
-            turbine: { id: getVal('turbineId'), stat_tunes: {} }
-        },
-        body: {
-            strengthening: {
-                id: getVal('chassisId'),
-                stat_tunes: { chassis_rigidity: getNum('chassisRigidity') }
-            },
-            weight_reduction: {
-                id: getVal('weightReductionId'),
-                stat_tunes: { weight: getNum('weightReduction') }
-            },
-            front_aero: { id: getVal('frontAeroId'), stat_tunes: {} },
-            rear_aero: { id: getVal('rearAeroId'), stat_tunes: {} }
-        },
-        suspension: {
-            front_springs: { id: getVal('frontSpringsId'), stat_tunes: {} },
-            rear_springs: { id: getVal('rearSpringsId'), stat_tunes: {} },
-            front_shocks: { id: getVal('frontShocksId'), stat_tunes: {} },
-            rear_shocks: { id: getVal('rearShocksId'), stat_tunes: {} },
-            front_stabs: { id: getVal('frontStabsId'), stat_tunes: {} },
-            rear_stabs: { id: getVal('rearStabsId'), stat_tunes: {} },
-            front_arms: {
-                id: getVal('frontArmsId'),
-                stat_tunes: {
-                    suspension_front_camber: { value: getNum('frontCamber') },
-                    suspension_front_toe: { value: getNum('frontToe') }
-                }
-            },
-            rear_arms: {
-                id: getVal('rearArmsId'),
-                stat_tunes: {
-                    suspension_rear_camber: { value: getNum('rearCamber') },
-                    suspension_rear_toe: { value: getNum('rearToe') }
-                }
-            },
-            brakes: {
-                id: getVal('brakesId'),
-                stat_tunes: { brake_power: getNum('brakePower') }
-            }
-        },
-        wheels: {
-            front_rim: { id: getVal('frontRimId'), stat_tunes: {} },
-            rear_rim: { id: getVal('rearRimId'), stat_tunes: {} },
-            front_tire: { id: getVal('frontTireId'), stat_tunes: {} },
-            rear_tire: { id: getVal('rearTireId'), stat_tunes: {} },
-            front_spacers: { id: `wheel_spacers_front_${getNum('frontSpacers')/5 || 0}`, stat_tunes: {} },
-            rear_spacers: { id: `wheel_spacers_rear_${getNum('rearSpacers')/5 || 0}`, stat_tunes: {} }
-        },
-        resources: {
-            gasoline: {
-                amount: getNum('gasolineAmount'),
-                max: 40,
-                type: getVal('gasolineType')
-            },
-            nitro: {
-                amount: getNum('nitroAmount'),
-                max: 20
-            }
-        },
-        visual: visual
-    };
-}
-
-// ================================================================
-// 🔧 TUNE HANDLER
-// ================================================================
-async function handleTune() {
-    if (!sessionId) { showToast('⚠️ Login dulu!', 'error'); return; }
-    if (!selectedCarId) { showToast('⚠️ Pilih mobil dulu!', 'error'); return; }
-
-    const tuneConfig = buildTuneConfig();
-    showStatus('tuningStatus', '⏳ Proses tuning...\n' + JSON.stringify(tuneConfig, null, 2).substring(0, 500) + '...', 'info');
-    setLoading('tuneBtn', true);
-
-    try {
-        const result = await callFunction('tune_car', {
-            session_id: sessionId,
-            car_id: selectedCarId,
-            tune_config: tuneConfig
-        });
-
-        if (result.status === 'success') {
-            showStatus('tuningStatus', `✅ ${result.message || 'Tuning sukses!'}`, 'success');
-            showToast('✅ Tuning berhasil!', 'success');
-            setTimeout(() => handleLogin(), 1500);
-        } else {
-            showStatus('tuningStatus', `❌ ${result.error || 'Tuning gagal!'}`, 'error');
-            showToast('❌ Tuning gagal!', 'error');
-        }
-    } catch (err) {
-        showStatus('tuningStatus', `❌ Error: ${err.message}`, 'error');
-        showToast('❌ Error koneksi!', 'error');
-    }
-    setLoading('tuneBtn', false);
-}
-
-// ================================================================
-// 🔄 RESET HANDLER
-// ================================================================
-async function handleReset() {
-    if (!sessionId || !selectedCarId) {
-        showToast('⚠️ Login dan pilih mobil dulu!', 'error');
-        return;
-    }
-
-    showStatus('tuningStatus', '⏳ Reset tuning...', 'info');
-    setLoading('resetBtn', true);
-
-    try {
-        const result = await callFunction('reset_car_tune', {
-            session_id: sessionId,
-            car_id: selectedCarId
-        });
-
-        if (result.status === 'success') {
-            showStatus('tuningStatus', `✅ ${result.message || 'Reset sukses!'}`, 'success');
-            showToast('✅ Reset berhasil!', 'success');
-            setTimeout(() => handleLogin(), 1500);
-        } else {
-            showStatus('tuningStatus', `❌ ${result.error || 'Reset gagal!'}`, 'error');
-            showToast('❌ Reset gagal!', 'error');
-        }
-    } catch (err) {
-        showStatus('tuningStatus', `❌ Error: ${err.message}`, 'error');
-        showToast('❌ Error koneksi!', 'error');
-    }
-    setLoading('resetBtn', false);
-}
-
-// ================================================================
-// 🔍 GET STRUCTURE
-// ================================================================
-async function handleGetStructure() {
-    if (!sessionId || !selectedCarId) {
-        showToast('⚠️ Login dan pilih mobil dulu!', 'error');
-        return;
-    }
-
-    showStatus('tuningStatus', '⏳ Ambil struktur tuning...', 'info');
-    setLoading('structBtn', true);
-
-    try {
-        const result = await callFunction('get_car_tuning_structure', {
-            session_id: sessionId,
-            car_id: selectedCarId
-        });
-
-        if (result.status === 'success') {
-            const structure = result.tuning_structure || {};
-            const tuning = structure.tuning || {};
-            const cells = tuning.cells || {};
-            
-            let html = `<strong>🚗 ${structure.desc_id || 'Unknown'}</strong>\n`;
-            html += `🎨 Body Kit: ${structure.body_kit || 'None'}\n\n`;
-
-            const cellNames = { '0': 'Engine', '1': 'Body/Chassis', '2': 'Transmission', '3': 'Suspension', '4': 'Wheels', '5': 'Visual/Styling' };
-            
-            for (const [key, cell] of Object.entries(cells)) {
-                html += `📂 Cell ${key}: ${cellNames[key] || cell.name || 'Unknown'}\n`;
-                html += `   ID: ${cell.id || 'None'}\n`;
-                for (const [subKey, sub] of Object.entries(cell.sub_cells || {})) {
-                    const statTunes = sub.stat_tunes || {};
-                    if (Object.keys(statTunes).length > 0) {
-                        html += `   └── [${subKey}] ${sub.id || 'None'}\n`;
-                        for (const [stat, val] of Object.entries(statTunes)) {
-                            html += `        ${stat}: ${JSON.stringify(val)}\n`;
-                        }
-                    }
-                }
-                html += '\n';
-            }
-            
-            showStatus('tuningStatus', `<pre>${html}</pre>`, 'info');
-            showToast('✅ Struktur berhasil diambil!', 'success');
-        } else {
-            showStatus('tuningStatus', `❌ ${result.error || 'Gagal ambil struktur!'}`, 'error');
-            showToast('❌ Gagal ambil struktur!', 'error');
-        }
-    } catch (err) {
-        showStatus('tuningStatus', `❌ Error: ${err.message}`, 'error');
-        showToast('❌ Error koneksi!', 'error');
-    }
-    setLoading('structBtn', false);
-}
-
-// ================================================================
-// 🔑 SET DEFAULT BUTTON TEXT & ENTER KEY
-// ================================================================
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.btn').forEach(btn => {
-        btn.dataset.original = btn.innerHTML;
+    const resReg = await fetch(regUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: regBody,
     });
-});
 
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        const active = document.activeElement;
-        if (active && (active.id === 'loginEmail' || active.id === 'loginPassword' || active.id === 'vipKey')) {
-            handleLogin();
-        }
+    const regJson = await resReg.json();
+    const token = regJson?.d?.token || regJson?.token;
+    const realNick = regJson?.d?.carxId || regJson?.d?.username || username;
+
+    if (!token) {
+      throw new Error(`Register CarX Gagal Ditolak: ${JSON.stringify(regJson)}`);
     }
+
+    // ================= 4. AUTOMATED OTP POLLING INTERCEPTOR =================
+    let otpCode: string | null = null;
+    const startTime = Date.now();
+    const timeoutMs = 120000; // Timeout Max 2 Menit
+
+    while (Date.now() - startTime < timeoutMs) {
+      await new Promise((r) => setTimeout(r, 4000)); // Sleep 4 Detik tiap polling
+
+      const msgRes = await fetch(`${BASE_TEMP_MAIL}/email/${emailAddr}/messages`, { headers: TEMP_HEADERS });
+      if (msgRes.ok) {
+        const messages = await msgRes.json();
+        if (messages && messages.length > 0) {
+          for (const msg of messages) {
+            const rawContent = `${msg.body || ""} ${msg.body_html || ""}`;
+            const cleanText = rawContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
+
+            // Multi-Tier Regex Matcher
+            const match1 = cleanText.match(/Your unique confirmation code[\s:]*([a-zA-Z0-9]{4,8})/i);
+            const match2 = cleanText.match(/(?:confirmation code|code|otp)[\s:]*([a-zA-Z0-9]{4,8})/i);
+            const match3 = cleanText.match(/\b([a-f0-9]{6})\b/i);
+
+            otpCode = match1?.[1] || match2?.[1] || match3?.[1] || null;
+            if (otpCode) break;
+          }
+        }
+      }
+      if (otpCode) break;
+    }
+
+    if (!otpCode) throw new Error("OTP Timeout: Kode verifikasi tidak ditemukan di Inbox Temp-Mail.");
+
+    // ================= 5. VERIFY AKUN CARX =================
+    const verifyUrl = "https://carx-id-prod.carx-online.com/api/auth/verify";
+    const resVerify = await fetch(verifyUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "UnityPlayer/6000.0.64f1 (UnityWebRequest/1.0, libcurl/8.10.1-DEV)",
+        "X-Unity-Version": "6000.0.64f1",
+      },
+      body: new URLSearchParams({ code: otpCode }),
+    });
+
+    if (!resVerify.ok) throw new Error("Verifikasi OTP ke CarX Auth Server gagal.");
+
+    // ================= 6. UNCOMPRESS GZIP, PATCH JSON & RE-COMPRESS =================
+    const cleanVaultBase64 = MASTER_COMPRESDATA_BASE64.trim().replace(/\s/g, "");
+    const rawBin = Uint8Array.from(atob(cleanVaultBase64), (c) => c.charCodeAt(0));
+    
+    // Deteksi Magic Bytes Marker Header GZIP (0x1f, 0x8b)
+    let gzStart = -1;
+    for (let i = 0; i < rawBin.length - 1; i++) {
+      if (rawBin[i] === 0x1f && rawBin[i + 1] === 0x8b) {
+        gzStart = i;
+        break;
+      }
+    }
+
+    if (gzStart === -1) {
+      throw new Error("Format master biner di tabel 'vault_sultan' invalid: Magic Bytes GZIP (0x1f8b) tidak ditemukan!");
+    }
+
+    const headerAsli = rawBin.slice(0, gzStart);
+    const gzBody = rawBin.slice(gzStart);
+
+    // Decompress Body Payload
+    const decompressedStream = new Response(gzBody).body!.pipeThrough(new DecompressionStream("gzip"));
+    const profileJsonText = await new Response(decompressedStream).text();
+    const profile = JSON.parse(profileJsonText);
+
+    // Modifikasi Resource Profile
+    profile.nickname = realNick;
+    profile.resources = profile.resources || {};
+    profile.resources.soft = { amount: Number(silver || 9999999) };
+    profile.resources.hard = { amount: Number(gold || 999999) };
+    profile.resources.experience = { amount: Number(exp || 999999) };
+    profile.last_save_time = Math.floor(Date.now() / 1000);
+
+    // Re-Compress Body Payload ke GZIP
+    const jsonBytes = new TextEncoder().encode(JSON.stringify(profile));
+    const compressedStream = new Response(jsonBytes).body!.pipeThrough(new CompressionStream("gzip"));
+    const newGzBuffer = await new Response(compressedStream).arrayBuffer();
+    const newGzArray = new Uint8Array(newGzBuffer);
+
+    // Re-combine Header Asli + New GZIP Payload
+    const finalPayloadArray = new Uint8Array(headerAsli.length + newGzArray.length);
+    finalPayloadArray.set(headerAsli, 0);
+    finalPayloadArray.set(newGzArray, headerAsli.length);
+
+    // Encode Biner Akhir ke Base64 String
+    let binaryStr = "";
+    for (let i = 0; i < finalPayloadArray.length; i++) {
+      binaryStr += String.fromCharCode(finalPayloadArray[i]);
+    }
+    const finalPayloadBase64 = btoa(binaryStr);
+
+    // ================= 7. INJECT SAVE DATA KE CARX PROFILE SERVER =================
+    const resInject = await fetch("https://street-prod.carx-online.com/str/v1/client/profiles", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "User-Agent": "UnityPlayer/6000.0.64f1 (UnityWebRequest/1.0, libcurl/8.10.1-DEV)",
+      },
+      body: JSON.stringify({ compressed_data: finalPayloadBase64 }),
+    });
+
+    if (!resInject.ok) {
+      throw new Error(`Profile Injection Rejected: ${await resInject.text()}`);
+    }
+
+    // ================= 8. RETURN RESPONSE KE CLIENT =================
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: {
+          email: emailAddr,
+          password: password,
+          username: realNick,
+          silver: Number(silver || 9999999),
+          gold: Number(gold || 999999),
+          exp: Number(exp || 999999),
+          token: token,
+          otp: otpCode,
+        },
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+    );
+
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ success: false, error: err.message || "Internal Cloud Execution Error" }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+    );
+  }
 });
-</script>
-</body>
-</html>
