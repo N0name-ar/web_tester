@@ -231,7 +231,7 @@
         <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Register & 5 Menu Modular Tuning</p>
     </div>
 
-    <!-- TAB NAVIGATION (DITAMBAHKAN TOMBOL REGISTERNYA) -->
+    <!-- TAB NAVIGATION -->
     <div class="tab-group">
         <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">🔐 Login Sesi</button>
         <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">🆕 Register Akun</button>
@@ -254,7 +254,7 @@
         <div id="loginStatus" class="hidden status-box"></div>
     </div>
 
-    <!-- TAB REGISTER (CARD REGISTER) -->
+    <!-- TAB REGISTER -->
     <div class="card hidden" id="registerSection">
         <div class="card-title gold">🆕 Auto Register Akun Baru</div>
         <div class="form-row">
@@ -406,7 +406,10 @@
 <div id="toast" class="toast"></div>
 
 <script>
-const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/gateway_tuning';
+// ================================================================
+// 🔧 URL GATEWAY SUPABASE (WAJIB KE GATEWAY, BUKAN LANGSUNG KE TUNING)
+// ================================================================
+const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/dasbor_tuning';
 
 let sessionId = null;
 let selectedCarObject = null;
@@ -445,7 +448,34 @@ function switchTab(tab) {
     document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
 }
 
-// REGISTER AKUN
+// ================================================================
+// 🛡️ HELPER FETCH KORIDOR GATEWAY (ANTI FAILED TO FETCH)
+// ================================================================
+async function apiPost(payloadData) {
+    try {
+        const response = await fetch(GATEWAY_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth'
+            },
+            body: JSON.stringify(payloadData)
+        });
+
+        const textResponse = await response.text();
+        try {
+            return JSON.parse(textResponse);
+        } catch {
+            return { status: false, error: "Format Respon Server Bukan JSON: " + textResponse };
+        }
+    } catch (err) {
+        return { status: false, error: "Network Error / Gagal Terhubung ke Gateway: " + err.message };
+    }
+}
+
+// ================================================================
+// 🆕 REGISTER AKUN
+// ================================================================
 async function handleRegister() {
     const password = document.getElementById('regPassword').value;
     const silver = document.getElementById('regSilver').value;
@@ -459,50 +489,38 @@ async function handleRegister() {
     showStatus('registerStatus', '⏳ Sedang mendaftarkan akun baru...', 'info');
     setLoading('registerBtn', true);
 
-    try {
-        const response = await fetch(GATEWAY_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth'
-            },
-            body: JSON.stringify({
-                step: 'register',
-                password: password,
-                silver: Number(silver),
-                gold: Number(gold)
-            })
-        });
+    const result = await apiPost({
+        step: 'register',
+        password: password,
+        silver: Number(silver),
+        gold: Number(gold)
+    });
 
-        const result = await response.json();
-
-        if (result.status === true) {
-            const acc = result.data;
-            showStatus('registerStatus', `
+    if (result.status === true) {
+        const acc = result.data;
+        showStatus('registerStatus', `
 ✅ REGISTER BERHASIL!
 📧 Email: ${acc.email}
 🔑 Password: ${acc.password}
 👤 Nick: ${acc.carx_id}
 
 💡 Email & password otomatis disalin ke menu Login!
-            `, 'success');
-            showToast('🎉 Akun baru berhasil dibuat!', 'success');
-            
-            document.getElementById('loginEmail').value = acc.email;
-            document.getElementById('loginPassword').value = acc.password;
-            setTimeout(() => switchTab('login'), 2500);
-        } else {
-            showStatus('registerStatus', `❌ ${result.error || 'Gagal register!'}`, 'error');
-            showToast('❌ Register gagal!', 'error');
-        }
-    } catch (err) {
-        showStatus('registerStatus', `❌ Error: ${err.message}`, 'error');
-        showToast('❌ Koneksi terputus!', 'error');
+        `, 'success');
+        showToast('🎉 Akun baru berhasil dibuat!', 'success');
+        
+        document.getElementById('loginEmail').value = acc.email;
+        document.getElementById('loginPassword').value = acc.password;
+        setTimeout(() => switchTab('login'), 2500);
+    } else {
+        showStatus('registerStatus', `❌ ${result.error || 'Gagal register!'}`, 'error');
+        showToast('❌ Register gagal!', 'error');
     }
     setLoading('registerBtn', false);
 }
 
-// LOGIN & AMBIL GARASI
+// ================================================================
+// 🚀 LOGIN & AMBIL GARASI
+// ================================================================
 async function handleLogin() {
     const email = document.getElementById('loginEmail').value;
     const pass = document.getElementById('loginPassword').value;
@@ -515,38 +533,21 @@ async function handleLogin() {
     showStatus('loginStatus', '⏳ Menghubungkan ke server game...', 'info');
     setLoading('loginBtn', true);
 
-    try {
-        const response = await fetch(GATEWAY_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth'
-            },
-            body: JSON.stringify({
-                step: 'login',
-                user: email,
-                pass: pass
-            })
+    const loginResult = await apiPost({
+        step: 'login',
+        user: email,
+        pass: pass
+    });
+
+    if (loginResult.status === 'success') {
+        sessionId = loginResult.session_id;
+        
+        const profileJson = await apiPost({
+            step: 'login_and_get_profile',
+            session_id: sessionId
         });
-
-        const result = await response.json();
-
-        if (result.status === 'success') {
-            sessionId = result.session_id;
-            
-            const profileRes = await fetch(GATEWAY_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth'
-                },
-                body: JSON.stringify({
-                    step: 'login_and_get_profile',
-                    session_id: sessionId
-                })
-            });
-            const profileJson = await profileRes.json();
-            
+        
+        if (profileJson.status === 'success') {
             carListRaw = profileJson.cars_raw || [];
 
             showStatus('loginStatus', `✅ LOGIN BERHASIL! Session: ${sessionId}`, 'success');
@@ -557,12 +558,12 @@ async function handleLogin() {
             renderCarList(carListRaw);
             showToast('✅ Garasi berhasil dimuat!', 'success');
         } else {
-            showStatus('loginStatus', `❌ ${result.error || 'Login gagal!'}`, 'error');
-            showToast('❌ Login gagal!', 'error');
+            showStatus('loginStatus', `❌ ${profileJson.error || 'Gagal mengambil profil garasi!'}`, 'error');
+            showToast('❌ Gagal muat profil!', 'error');
         }
-    } catch (err) {
-        showStatus('loginStatus', `❌ Error: ${err.message}`, 'error');
-        showToast('❌ Error koneksi gateway!', 'error');
+    } else {
+        showStatus('loginStatus', `❌ ${loginResult.error || 'Login gagal!'}`, 'error');
+        showToast('❌ Login gagal!', 'error');
     }
     setLoading('loginBtn', false);
 }
@@ -594,7 +595,9 @@ function selectCar(carObj) {
     showToast(`🚗 Mobil ${carObj.__desc_id} terpilih`, 'info');
 }
 
-// TERAPKAN MODULAR TUNING (5 MENU)
+// ================================================================
+// ⚙️ TERAPKAN MODULAR TUNING (5 MENU)
+// ================================================================
 async function handleApplyModularTune() {
     if (!sessionId) { showToast('⚠️ Sesi habis, login ulang!', 'error'); return; }
     if (!selectedCarObject) { showToast('⚠️ Pilih mobil terlebih dahulu!', 'error'); return; }
@@ -628,28 +631,14 @@ async function handleApplyModularTune() {
     showStatus('tuningStatus', '⏳ Menyinkronkan modular tuning ke server...', 'info');
     setLoading('applyTuneBtn', true);
 
-    try {
-        const response = await fetch(GATEWAY_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth'
-            },
-            body: JSON.stringify(payloadData)
-        });
+    const result = await apiPost(payloadData);
 
-        const result = await response.json();
-
-        if (result.status === 'success') {
-            showStatus('tuningStatus', `✅ ${result.message}`, 'success');
-            showToast('🎉 Modular tuning sukses diterapkan!', 'success');
-        } else {
-            showStatus('tuningStatus', `❌ ${result.error || 'Gagal sinkronisasi!'}`, 'error');
-            showToast('❌ Gagal menerapkan tuning!', 'error');
-        }
-    } catch (err) {
-        showStatus('tuningStatus', `❌ Error: ${err.message}`, 'error');
-        showToast('❌ Koneksi terputus!', 'error');
+    if (result.status === 'success') {
+        showStatus('tuningStatus', `✅ ${result.message}`, 'success');
+        showToast('🎉 Modular tuning sukses diterapkan!', 'success');
+    } else {
+        showStatus('tuningStatus', `❌ ${result.error || 'Gagal sinkronisasi!'}`, 'error');
+        showToast('❌ Gagal menerapkan tuning!', 'error');
     }
     setLoading('applyTuneBtn', false);
 }
