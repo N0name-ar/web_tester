@@ -228,12 +228,13 @@
 
     <div class="header">
         <h1>🏎️ CarX Modular Tester</h1>
-        <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- 5 Menu Modular Tuning</p>
+        <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Register & 5 Menu Modular Tuning</p>
     </div>
 
     <!-- TAB NAVIGATION -->
     <div class="tab-group">
         <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">🔐 Login Sesi</button>
+        <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">🆕 Register Akun</button>
     </div>
 
     <!-- TAB LOGIN -->
@@ -251,6 +252,27 @@
         </div>
         <button class="btn btn-primary btn-block" id="loginBtn" onclick="handleLogin()">🚀 Login & Ambil Garasi</button>
         <div id="loginStatus" class="hidden status-box"></div>
+    </div>
+
+    <!-- TAB REGISTER -->
+    <div class="card hidden" id="registerSection">
+        <div class="card-title gold">🆕 Auto Register Akun Baru</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>🔑 Password Baru</label>
+                <input type="password" id="regPassword" placeholder="Password" value="Rahasia123">
+            </div>
+            <div class="form-group">
+                <label>🪙 Silver</label>
+                <input type="number" id="regSilver" value="9999999">
+            </div>
+            <div class="form-group">
+                <label>💰 Gold</label>
+                <input type="number" id="regGold" value="999999">
+            </div>
+        </div>
+        <button class="btn btn-warning btn-block" id="registerBtn" onclick="handleRegister()">🚀 Proses Auto Register</button>
+        <div id="registerStatus" class="hidden status-box"></div>
     </div>
 
     <!-- CAR LIST -->
@@ -421,7 +443,69 @@ function setLoading(btnId, loading) {
 
 function switchTab(tab) {
     document.getElementById('loginSection').classList.toggle('hidden', tab !== 'login');
+    document.getElementById('registerSection').classList.toggle('hidden', tab !== 'register');
     document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+}
+
+// ================================================================
+// 🆕 REGISTER AKUN
+// ================================================================
+async function handleRegister() {
+    const password = document.getElementById('regPassword').value;
+    const silver = document.getElementById('regSilver').value;
+    const gold = document.getElementById('regGold').value;
+
+    if (!password) {
+        showToast('⚠️ Password wajib diisi!', 'error');
+        return;
+    }
+
+    showStatus('registerStatus', '⏳ Sedang mendaftarkan akun baru...', 'info');
+    setLoading('registerBtn', true);
+
+    try {
+        const response = await fetch(GATEWAY_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth'
+            },
+            body: JSON.stringify({
+                step: 'register',
+                password: password,
+                silver: Number(silver),
+                gold: Number(gold)
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.status === true) {
+            const acc = result.data;
+            showStatus('registerStatus', `
+✅ REGISTER BERHASIL!
+📧 Email: ${acc.email}
+🔑 Password: ${acc.password}
+👤 Nick: ${acc.carx_id}
+
+💡 Email dan password otomatis disalin ke menu Login!
+            `, 'success');
+            showToast('🎉 Akun baru berhasil dibuat!', 'success');
+            
+            // Auto isi ke form login & pindah tab
+            document.getElementById('loginEmail').value = acc.email;
+            document.getElementById('loginPassword').value = acc.password;
+            setTimeout(() => switchTab('login'), 2000);
+        } else {
+            showStatus('registerStatus', `❌ ${result.error || 'Gagal register!'}`, 'error');
+            showToast('❌ Register gagal!', 'error');
+        }
+    } catch (err) {
+        showStatus('registerStatus', `❌ Error: ${err.message}`, 'error');
+        showToast('❌ Koneksi terputus!', 'error');
+    }
+    setLoading('registerBtn', false);
 }
 
 // ================================================================
@@ -458,7 +542,6 @@ async function handleLogin() {
         if (result.status === 'success') {
             sessionId = result.session_id;
             
-            // Ambil profile lengkap untuk mendapatkan list mobil & objek biner aslinya
             const profileRes = await fetch(GATEWAY_URL, {
                 method: 'POST',
                 headers: {
@@ -472,7 +555,6 @@ async function handleLogin() {
             });
             const profileJson = await profileRes.json();
             
-            // Simpan data mentah garasi
             carListRaw = profileJson.cars_raw || [];
 
             showStatus('loginStatus', `✅ LOGIN BERHASIL! Session: ${sessionId}`, 'success');
@@ -527,34 +609,28 @@ async function handleApplyModularTune() {
     if (!sessionId) { showToast('⚠️ Sesi habis, login ulang!', 'error'); return; }
     if (!selectedCarObject) { showToast('⚠️ Pilih mobil terlebih dahulu!', 'error'); return; }
 
-    // Ambil nilai dari 5 Menu
     const payloadData = {
         step: 'append_sultan_cars',
         session_id: sessionId,
         data_mobil_tunggal: selectedCarObject,
         
-        // Menu 1: Bodi
         body_mass: document.getElementById('bodyMass').value,
         body_front_downforce: document.getElementById('aeroFront').value,
         body_rear_downforce: document.getElementById('aeroRear').value,
         bodi_action: document.getElementById('actionLepasBodi').checked ? 'lepas_bodi' : '',
 
-        // Menu 2: Sasis
         suspension_front_stiffness: document.getElementById('susFrontStiff').value,
         suspension_rear_stiffness: document.getElementById('susRearStiff').value,
         suspension_front_camber: document.getElementById('susCamber').value,
         brake_max_torque: document.getElementById('brakeMaxTorque').value,
 
-        // Menu 3: Sensor Gas & Rem
         throttle_limit: document.getElementById('throttleLimit').value,
         engine_turbo_pressure: document.getElementById('engineTurbo').value,
 
-        // Menu 4: Ban
         wheel_front_tyre_pressure: document.getElementById('tyrePressFront').value,
         wheel_rear_tyre_pressure: document.getElementById('tyrePressRear').value,
         wheel_front_base_width_offset: document.getElementById('wheelOffset').value,
 
-        // Menu 5: Speed
         swap_gearbox: document.getElementById('swapGearbox').value,
         gear_shifting_delay: document.getElementById('shiftDelay').value
     };
