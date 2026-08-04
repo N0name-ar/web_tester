@@ -3,638 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏎️ CarX Modular Tuning Tester</title>
+    <title>🏎️ CarX VVIP Master Control & Tuning</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
+            color: #fff; min-height: 100vh; padding: 20px;
         }
         .container { max-width: 1100px; margin: 0 auto; }
-        .header { text-align: center; padding: 20px 0 30px; }
+        .header { text-align: center; padding: 15px 0 25px; }
         .header h1 {
-            font-size: 2.5em;
+            font-size: 2.3em;
             background: linear-gradient(45deg, #f093fb, #f5576c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .header p { color: #888; margin-top: 5px; }
-
         .card {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 20px 25px;
-            margin-bottom: 20px;
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+            border-radius: 16px; padding: 20px 25px; margin-bottom: 20px;
             border: 1px solid rgba(255,255,255,0.08);
         }
-        .card-title {
-            font-size: 1.1em;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-        .card-title.pink { color: #f093fb; }
-        .card-title.gold { color: #f6d365; }
-        .card-title.blue { color: #4facfe; }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        .form-group label {
-            font-size: 0.75em;
-            color: #aaa;
-            margin-bottom: 4px;
-            font-weight: 600;
-        }
+        .card-title { font-size: 1.1em; margin-bottom: 15px; font-weight: 600; }
+        .pink { color: #f093fb; } .gold { color: #f6d365; } .blue { color: #4facfe; } .green { color: #00c853; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 0.75em; color: #aaa; margin-bottom: 4px; font-weight: 600; }
         .form-group input, .form-group select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.07);
-            color: #fff;
-            font-size: 13px;
-            transition: all 0.3s;
+            padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.07); color: #fff; font-size: 13px;
         }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #f093fb;
-            box-shadow: 0 0 20px rgba(240, 147, 251, 0.15);
-        }
-        .form-group option { background: #24243e; color: #fff; }
-
-        .btn {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-        }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn { padding: 10px 20px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; text-transform: uppercase; transition: all 0.3s; }
         .btn-block { width: 100%; }
         .btn-primary { background: linear-gradient(45deg, #f093fb, #f5576c); color: #fff; }
         .btn-success { background: linear-gradient(45deg, #4facfe, #00f2fe); color: #fff; }
         .btn-warning { background: linear-gradient(45deg, #f6d365, #fda085); color: #333; }
-        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .tab-group { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .tab-btn {
+            padding: 8px 16px; border: 2px solid rgba(255,255,255,0.1); border-radius: 10px;
+            background: transparent; color: #888; cursor: pointer; font-weight: 600; font-size: 13px;
+        }
+        .tab-btn.active { border-color: #f093fb; color: #f093fb; background: rgba(240,147,251,0.1); }
         .hidden { display: none !important; }
         .mt-10 { margin-top: 10px; }
         .text-muted { color: #888; font-size: 0.85em; }
-
-        .tab-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        .tab-btn {
-            padding: 8px 20px;
-            border: 2px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-            background: transparent;
-            color: #888;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .tab-btn.active {
-            border-color: #f093fb;
-            color: #f093fb;
-            background: rgba(240,147,251,0.1);
-        }
-
-        .car-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 8px;
-            max-height: 250px;
-            overflow-y: auto;
-            padding: 4px;
-        }
-        .car-item {
-            background: rgba(255,255,255,0.05);
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-        }
+        .car-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; max-height: 220px; overflow-y: auto; padding: 4px; }
+        .car-item { background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; font-size: 12px; }
         .car-item:hover { background: rgba(255,255,255,0.1); }
         .car-item.selected { border-color: #f093fb; background: rgba(240, 147, 251, 0.15); }
-
-        .tune-section {
-            background: rgba(255,255,255,0.03);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 12px;
-            border-left: 3px solid #4facfe;
-        }
-        .tune-section .label {
-            font-weight: 600;
-            font-size: 0.85em;
-            margin-bottom: 8px;
-        }
-        .label-bodi { color: #f5576c; }
-        .label-sasis { color: #f6d365; }
-        .label-sensor { color: #4facfe; }
-        .label-ban { color: #00c853; }
-        .label-speed { color: #f093fb; }
-
-        .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 5px 0;
-        }
-        .checkbox-group label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.8em;
-            color: #ccc;
-            cursor: pointer;
-        }
-        .checkbox-group input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: #f093fb;
-            cursor: pointer;
-        }
-
-        .status-box {
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-top: 10px;
-            font-size: 13px;
-            white-space: pre-wrap;
-            max-height: 400px;
-            overflow: auto;
-        }
+        .tune-section { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px; margin-bottom: 12px; border-left: 3px solid #4facfe; }
+        .status-box { padding: 12px 16px; border-radius: 10px; margin-top: 10px; font-size: 13px; white-space: pre-wrap; max-height: 300px; overflow: auto; }
         .status-box.success { background: rgba(0,200,83,0.12); border: 1px solid rgba(0,200,83,0.3); }
         .status-box.error { background: rgba(213,0,0,0.12); border: 1px solid rgba(213,0,0,0.3); }
         .status-box.info { background: rgba(41,121,255,0.12); border: 1px solid rgba(41,121,255,0.3); }
-
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            padding: 14px 24px;
-            border-radius: 12px;
-            background: #333;
-            color: #fff;
-            transform: translateY(120px);
-            opacity: 0;
-            transition: all 0.5s;
-            z-index: 1000;
-            max-width: 400px;
-            font-size: 14px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
+        .toast { position: fixed; bottom: 30px; right: 30px; padding: 14px 24px; border-radius: 12px; background: #333; color: #fff; transform: translateY(120px); opacity: 0; transition: all 0.5s; z-index: 1000; font-size: 14px; }
         .toast.show { transform: translateY(0); opacity: 1; }
-        .toast.success { background: #00c853; }
-        .toast.error { background: #d50000; }
-        .toast.info { background: #2979ff; }
-
-        .loading {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 3px solid rgba(255,255,255,0.2);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .toast.success { background: #00c853; } .toast.error { background: #d50000; } .toast.info { background: #2979ff; }
     </style>
 </head>
 <body>
 
 <div class="container">
-
     <div class="header">
-        <h1>🏎️ CarX Modular Tester</h1>
-        <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Register & 5 Menu Modular Tuning</p>
+        <h1>🏎️ CarX VVIP Master Control</h1>
+        <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Panel Modular Tuning, Register, & Cloud VVIP</p>
+    </div>
+
+    <!-- GLOBAL KEY AUTH -->
+    <div class="card">
+        <div class="card-title pink">🔑 Otorisasi Kunci VVIP Gateway</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Masukkan Key VVIP Anda</label>
+                <input type="text" id="globalVipKey" value="TITIK-TEMU-DEMO-KEY">
+            </div>
+        </div>
     </div>
 
     <!-- TAB NAVIGATION -->
     <div class="tab-group">
-        <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">🔐 Login Sesi</button>
-        <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">🆕 Register Akun</button>
+        <button class="tab-btn active" onclick="switchTab('tuning')">⚙️ Tuning Garasi</button>
+        <button class="tab-btn" onclick="switchTab('register')">🆕 Register Akun</button>
+        <button class="tab-btn" onclick="switchTab('backup')">💾 Cloud Backup</button>
+        <button class="tab-btn" onclick="switchTab('unban')">☣️ Unban / Self-Healing</button>
+        <button class="tab-btn" onclick="switchTab('clone')">👑 Kloning Akun</button>
     </div>
 
-    <!-- TAB LOGIN -->
-    <div class="card" id="loginSection">
-        <div class="card-title pink">🔐 Login Akun CarX</div>
+    <!-- TAB 1: MODULAR TUNING GARASI -->
+    <div class="card" id="section-tuning">
+        <div class="card-title blue">1️⃣ Login & Pilih Mobil Garasi untuk Dimodifikasi</div>
         <div class="form-row">
-            <div class="form-group">
-                <label>📧 Email</label>
-                <input type="email" id="loginEmail" placeholder="email@gmail.com">
-            </div>
-            <div class="form-group">
-                <label>🔑 Password</label>
-                <input type="password" id="loginPassword" placeholder="Password">
-            </div>
+            <div class="form-group"><label>📧 Email Akun Game</label><input type="email" id="tuneEmail" placeholder="email@gmail.com"></div>
+            <div class="form-group"><label>🔑 Password Akun Game</label><input type="password" id="tunePass" placeholder="Password"></div>
         </div>
-        <button class="btn btn-primary btn-block" id="loginBtn" onclick="handleLogin()">🚀 Login & Ambil Garasi</button>
-        <div id="loginStatus" class="hidden status-box"></div>
+        <button class="btn btn-primary btn-block" onclick="handleLoginAndGetCars()">🚀 Login & Tarik Garasi</button>
+        <div id="tuneLoginStatus" class="hidden status-box"></div>
+
+        <!-- LIST MOBIL -->
+        <div class="hidden mt-10" id="carListCard">
+            <div class="card-title green mt-10">🏎️ Daftar Mobil di Garasi</div>
+            <div id="carListContainer" class="car-list"></div>
+            <div class="mt-10 text-muted">Session ID: <strong id="sessionIdText">-</strong></div>
+        </div>
+
+        <!-- PANEL PARAMETER TUNING -->
+        <div class="hidden mt-10" id="tuningPanelCard">
+            <div class="card-title gold mt-10">🎛️ Panel Parameter Tuning Mobil Terpilih</div>
+            <div class="form-row">
+                <div class="form-group"><label>🚗 Terpilih</label><input type="text" id="selectedCarName" readonly style="background:rgba(255,255,255,0.03);"></div>
+            </div>
+
+            <!-- Bodi -->
+            <div class="tune-section">
+                <div class="label pink">Menu Bodi & Downforce</div>
+                <div class="form-row">
+                    <div class="form-group"><label>Berat Massa</label><input type="number" id="bodyMass" value="1200"></div>
+                    <div class="form-group"><label>Aero Depan</label><input type="number" id="aeroFront" value="-0.2" step="0.1"></div>
+                    <div class="form-group"><label>Aero Belakang</label><input type="number" id="aeroRear" value="1.5" step="0.1"></div>
+                </div>
+                <div style="margin-top:8px;">
+                    <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="actionLepasBodi"> 🛠️ Lepas Bodi (Bonnet, Bumper, Dll)</label>
+                </div>
+            </div>
+
+            <!-- Mesin & ECU -->
+            <div class="tune-section" style="border-left-color:#00c853;">
+                <div class="label green">Menu Mesin & ECU</div>
+                <div class="form-row">
+                    <div class="form-group"><label>Turbo Pressure / Torsi</label><input type="number" id="engineTurbo" value="2.5" step="0.1"></div>
+                    <div class="form-group">
+                        <label>Swap Engine</label>
+                        <select id="swapEngine">
+                            <option value="ORI">-- Tetap / ORI --</option>
+                            <option value="engine_v8_supercharged">V8 Supercharged</option>
+                            <option value="engine_jz2_swap">2JZ-GTE Swap</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ban -->
+            <div class="tune-section" style="border-left-color:#f6d365;">
+                <div class="label gold">Menu Tekanan Ban</div>
+                <div class="form-row">
+                    <div class="form-group"><label>Tekanan Ban Depan</label><input type="number" id="tyreFront" value="1.5" step="0.1"></div>
+                    <div class="form-group"><label>Tekanan Ban Belakang</label><input type="number" id="tyreRear" value="1.5" step="0.1"></div>
+                </div>
+            </div>
+
+            <button class="btn btn-success btn-block" onclick="handleApplyTune()">🚀 Terapkan Modular Tuning ke Mobil Ini</button>
+            <div id="applyStatus" class="hidden status-box"></div>
+        </div>
     </div>
 
-    <!-- TAB REGISTER -->
-    <div class="card hidden" id="registerSection">
-        <div class="card-title gold">🆕 Auto Register Akun Baru</div>
+    <!-- TAB 2: REGISTER AKUN -->
+    <div class="card hidden" id="section-register">
+        <div class="card-title gold">🆕 Auto Register Akun Baru & Injeksi Data</div>
         <div class="form-row">
-            <div class="form-group">
-                <label>📧 Email Baru</label>
-                <input type="email" id="regEmail" placeholder="emailbaru@gmail.com">
-            </div>
-            <div class="form-group">
-                <label>🔑 Password Baru</label>
-                <input type="password" id="regPassword" placeholder="Password">
-            </div>
-            <div class="form-group">
-                <label>🪙 Silver</label>
-                <input type="number" id="regSilver" value="9999999">
-            </div>
-            <div class="form-group">
-                <label>💰 Gold</label>
-                <input type="number" id="regGold" value="999999">
-            </div>
+            <div class="form-group"><label>Email Baru</label><input type="email" id="regEmail" placeholder="email@gmail.com"></div>
+            <div class="form-group"><label>Password Baru</label><input type="password" id="regPass" placeholder="Password"></div>
         </div>
-        <button class="btn btn-warning btn-block" id="registerBtn" onclick="handleRegister()">🚀 Proses Auto Register</button>
-        <div id="registerStatus" class="hidden status-box"></div>
-    </div>
-
-    <!-- CAR LIST -->
-    <div class="card hidden" id="carListSection">
-        <div class="card-title blue">🏎️ Pilih Kendaraan Target <span class="text-muted" id="totalCarsLabel"></span></div>
-        <div id="carListContainer" class="car-list"></div>
-        <div class="mt-10 text-muted" style="display:flex;gap:15px;flex-wrap:wrap;">
-            <span>Session ID: <strong id="sessionIdDisplay">-</strong></span>
-        </div>
-    </div>
-
-    <!-- MODULAR TUNING SECTION -->
-    <div class="card hidden" id="tuningSection">
-        <div class="card-title gold">⚙️ Panel Tuning Modular (5 Menu Utama)</div>
-
         <div class="form-row">
-            <div class="form-group">
-                <label>🚗 Mobil Terpilih</label>
-                <input type="text" id="selectedCar" readonly placeholder="Pilih mobil dari garasi di atas" style="background:rgba(255,255,255,0.03);">
-            </div>
+            <div class="form-group"><label>Silver</label><input type="number" id="regSilver" value="9999999"></div>
+            <div class="form-group"><label>Gold</label><input type="number" id="regGold" value="999999"></div>
         </div>
-
-        <!-- 1. BODI -->
-        <div class="tune-section" style="border-left-color: #f5576c;">
-            <div class="label label-bodi">1️⃣ Menu Bodi (Massa, Downforce & Lepas Bodi)</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Berat Massa</label>
-                    <input type="number" id="bodyMass" value="1200" step="50">
-                </div>
-                <div class="form-group">
-                    <label>Aero Front Downforce</label>
-                    <input type="number" id="aeroFront" value="-0.2" step="0.1">
-                </div>
-                <div class="form-group">
-                    <label>Aero Rear Downforce</label>
-                    <input type="number" id="aeroRear" value="1.5" step="0.1">
-                </div>
-            </div>
-            <div class="checkbox-group">
-                <label><input type="checkbox" id="actionLepasBodi"> 🛠️ Lepas Bodi (Bonnet, Trunk, Bumper, Dll)</label>
-            </div>
-        </div>
-
-        <!-- 2. SASIS -->
-        <div class="tune-section" style="border-left-color: #f6d365;">
-            <div class="label label-sasis">2️⃣ Menu Sasis (Suspensi, Per, Camber & Rem)</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Kekakuan Per Depan</label>
-                    <input type="number" id="susFrontStiff" value="45000" step="1000">
-                </div>
-                <div class="form-group">
-                    <label>Kekakuan Per Belakang</label>
-                    <input type="number" id="susRearStiff" value="40000" step="1000">
-                </div>
-                <div class="form-group">
-                    <label>Camber Depan</label>
-                    <input type="number" id="susCamber" value="-3.0" step="0.1">
-                </div>
-                <div class="form-group">
-                    <label>Maksimal Torsi Rem</label>
-                    <input type="number" id="brakeMaxTorque" value="3500" step="100">
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. SENSOR GAS DAN REM -->
-        <div class="tune-section" style="border-left-color: #4facfe;">
-            <div class="label label-sensor">3️⃣ Menu Sensor Gas dan Rem (Throttle Limit & Turbo Pressure)</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Throttle Limit</label>
-                    <input type="number" id="throttleLimit" value="1" step="0.1" min="0" max="1">
-                </div>
-                <div class="form-group">
-                    <label>Turbo Pressure / Torsi ECU</label>
-                    <input type="number" id="engineTurbo" value="2.5" step="0.1">
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. BAN -->
-        <div class="tune-section" style="border-left-color: #00c853;">
-            <div class="label label-ban">4️⃣ Menu Ban (Tekanan Angin & Spacers)</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Tekanan Ban Depan</label>
-                    <input type="number" id="tyrePressFront" value="1.5" step="0.1">
-                </div>
-                <div class="form-group">
-                    <label>Tekanan Ban Belakang</label>
-                    <input type="number" id="tyrePressRear" value="1.5" step="0.1">
-                </div>
-                <div class="form-group">
-                    <label>Lebar Spacers Depan</label>
-                    <input type="number" id="wheelOffset" value="0.05" step="0.01">
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. SPEED -->
-        <div class="tune-section" style="border-left-color: #f093fb;">
-            <div class="label label-speed">5️⃣ Menu Speed (Gearbox & Shift Delay)</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Swap Gearbox</label>
-                    <select id="swapGearbox">
-                        <option value="ORI">-- Tetap / ORI --</option>
-                        <option value="transmission_gearbox_racing">Racing Gearbox</option>
-                        <option value="transmission_gearbox_sequential">Sequential Gearbox</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Shift Delay (Kecepatan Pindah Gigi)</label>
-                    <input type="number" id="shiftDelay" value="0.05" step="0.01" min="0">
-                </div>
-            </div>
-        </div>
-
-        <!-- ACTIONS -->
-        <div class="btn-group">
-            <button class="btn btn-success btn-block" id="applyTuneBtn" onclick="handleApplyModularTune()">🚀 Terapkan Modular Tuning</button>
-        </div>
-        <div id="tuningStatus" class="hidden status-box"></div>
+        <button class="btn btn-warning btn-block" onclick="handleRegister()">🚀 Proses Register</button>
+        <div id="regStatus" class="hidden status-box"></div>
     </div>
 
+    <!-- TAB 3: CLOUD BACKUP -->
+    <div class="card hidden" id="section-backup">
+        <div class="card-title pink">💾 Cadangkan Progres Akun ke Cloud VVIP</div>
+        <div class="form-row">
+            <div class="form-group"><label>Email</label><input type="email" id="bkEmail" placeholder="email@gmail.com"></div>
+            <div class="form-group"><label>Password</label><input type="password" id="bkPass" placeholder="Password"></div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="handleCloudBackup()">🚀 Upload Backup ke Cloud</button>
+        <div id="bkStatus" class="hidden status-box"></div>
+    </div>
+
+    <!-- TAB 4: UNBAN / SELF-HEALING -->
+    <div class="card hidden" id="section-unban">
+        <div class="card-title gold">☣️ Pemulihan Akun Terkena Banned (Self-Healing)</div>
+        <div class="form-row">
+            <div class="form-group"><label>Email Akun Terbanned</label><input type="email" id="ubEmail" placeholder="email@gmail.com"></div>
+        </div>
+        <button class="btn btn-warning btn-block" onclick="handleUnban()">🚀 Jalankan Auto Self-Healing</button>
+        <div id="ubStatus" class="hidden status-box"></div>
+    </div>
+
+    <!-- TAB 5: CLONE AKUN -->
+    <div class="card hidden" id="section-clone">
+        <div class="card-title blue">👑 Kloning Akun Sultan Langsung</div>
+        <div class="form-row">
+            <div class="form-group"><label>Email Target (Sultan)</label><input type="email" id="clTargetEmail" placeholder="sultan@gmail.com"></div>
+            <div class="form-group"><label>Password Target</label><input type="password" id="clTargetPass" placeholder="Pass Sultan"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Email Akun Baru</label><input type="email" id="clNewEmail" placeholder="baru@gmail.com"></div>
+            <div class="form-group"><label>Password Akun Baru</label><input type="password" id="clNewPass" placeholder="Pass Baru"></div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="handleCloneAccount()">🚀 Proses Kloning Instan</button>
+        <div id="clStatus" class="hidden status-box"></div>
+    </div>
 </div>
 
-<!-- TOAST -->
 <div id="toast" class="toast"></div>
 
 <script>
-// ================================================================
-// 🔧 URL GATEWAY SUPABASE
-// ================================================================
-const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/tuning';
+const GATEWAY_URL = 'https://ugfokxuasdpxiscnagmm.supabase.co/functions/v1/code_clone'; // Ganti dengan URL Gateway lu
 
-let sessionId = null;
-let selectedCarObject = null;
-let carListRaw = [];
+let currentSessionId = null;
+let selectedCarData = null;
 
 function showToast(msg, type = 'info') {
     const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = `toast ${type}`;
+    t.textContent = msg; t.className = `toast ${type}`;
     setTimeout(() => t.classList.add('show'), 100);
     setTimeout(() => t.classList.remove('show'), 4000);
 }
 
 function showStatus(id, msg, type = 'info') {
     const el = document.getElementById(id);
-    el.classList.remove('hidden');
-    el.className = `status-box ${type}`;
-    el.innerHTML = msg;
+    el.classList.remove('hidden'); el.className = `status-box ${type}`; el.innerHTML = msg;
 }
 
-function setLoading(btnId, loading) {
-    const btn = document.getElementById(btnId);
-    if (loading) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="loading"></span> Processing...';
-    } else {
-        btn.disabled = false;
-        btn.innerHTML = btn.dataset.original || 'Submit';
-    }
+function switchTab(tabName) {
+    ['tuning', 'register', 'backup', 'unban', 'clone'].forEach(t => {
+        document.getElementById(`section-${t}`).classList.toggle('hidden', t !== tabName);
+    });
+    document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+        const tabs = ['tuning', 'register', 'backup', 'unban', 'clone'];
+        btn.classList.toggle('active', tabs[idx] === tabName);
+    });
 }
 
-function switchTab(tab) {
-    document.getElementById('loginSection').classList.toggle('hidden', tab !== 'login');
-    document.getElementById('registerSection').classList.toggle('hidden', tab !== 'register');
-    document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
-    document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
-}
+async function apiCall(payload) {
+    const vipKey = document.getElementById('globalVipKey').value.trim();
+    if (!vipKey) { showToast('⚠️ Masukkan Key VVIP!', 'error'); return { error: "Key kosong" }; }
 
-// ================================================================
-// 🛡️ HELPER FETCH KORIDOR GATEWAY
-// ================================================================
-async function apiPost(payloadData) {
     try {
-        const response = await fetch(GATEWAY_URL, {
+        const res = await fetch(GATEWAY_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth'
-            },
-            body: JSON.stringify(payloadData)
+            headers: { 'Content-Type': 'application/json', 'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth' },
+            body: JSON.stringify({ ...payload, vip_key: vipKey })
         });
-
-        const textResponse = await response.text();
-        try {
-            return JSON.parse(textResponse);
-        } catch {
-            return { status: false, error: "Format Respon Server Bukan JSON: " + textResponse };
-        }
+        const text = await res.text();
+        try { return JSON.parse(text); } catch { return { error: "Respon non-JSON: " + text }; }
     } catch (err) {
-        return { status: false, error: "Network Error / Gagal Terhubung ke Gateway: " + err.message };
+        return { error: "Network Error: " + err.message };
     }
 }
 
-// ================================================================
-// 🆕 REGISTER AKUN
-// ================================================================
-async function handleRegister() {
-    const email = document.getElementById('regEmail').value;
-    const password = document.getElementById('regPassword').value;
-    const silver = document.getElementById('regSilver').value;
-    const gold = document.getElementById('regGold').value;
+async function handleLoginAndGetCars() {
+    const email = document.getElementById('tuneEmail').value;
+    const pass = document.getElementById('tunePass').value;
+    if (!email || !pass) { showToast('⚠️ Email & Password wajib diisi!', 'error'); return; }
 
-    if (!email || !password) {
-        showToast('⚠️ Email dan Password wajib diisi!', 'error');
-        return;
-    }
+    showStatus('tuneLoginStatus', '⏳ Menghubungkan & menarik garasi...', 'info');
+    const res = await apiCall({ step: 'login_and_get_cars', user: email, pass: pass });
 
-    showStatus('registerStatus', '⏳ Sedang mendaftarkan akun baru...', 'info');
-    setLoading('registerBtn', true);
-
-    const result = await apiPost({
-        step: 'register',
-        email: email,
-        password: password,
-        silver: Number(silver),
-        gold: Number(gold)
-    });
-
-    if (result.status === 'success') {
-        showStatus('registerStatus', `✅ REGISTER BERHASIL!\n📧 Email: ${email}\n🔑 Password: ${password}\n💬 ${result.message}`, 'success');
-        showToast('🎉 Akun baru berhasil dibuat!', 'success');
-        
-        document.getElementById('loginEmail').value = email;
-        document.getElementById('loginPassword').value = password;
-        setTimeout(() => switchTab('login'), 2500);
+    if (res.status === 'success') {
+        currentSessionId = res.session_id;
+        document.getElementById('sessionIdText').textContent = currentSessionId;
+        document.getElementById('carListCard').classList.remove('hidden');
+        showStatus('tuneLoginStatus', `✅ Login Sukses! Ditemukan ${(res.cars || []).length} mobil.`, 'success');
+        renderCars(res.cars || []);
+        showToast('✅ Garasi berhasil dimuat!', 'success');
     } else {
-        showStatus('registerStatus', `❌ ${result.error || 'Gagal register!'}`, 'error');
-        showToast('❌ Register gagal!', 'error');
+        showStatus('tuneLoginStatus', `❌ ${res.error || 'Gagal login!'}`, 'error');
+        showToast('❌ Gagal login!', 'error');
     }
-    setLoading('registerBtn', false);
 }
 
-// ================================================================
-// 🚀 LOGIN & AMBIL GARASI (DISINKRONKAN)
-// ================================================================
-async function handleLogin() {
-    const email = document.getElementById('loginEmail').value;
-    const pass = document.getElementById('loginPassword').value;
-    
-    if (!email || !pass) {
-        showToast('⚠️ Email dan Password wajib diisi!', 'error');
-        return;
-    }
-
-    showStatus('loginStatus', '⏳ Menghubungkan ke server game & mengambil garasi...', 'info');
-    setLoading('loginBtn', true);
-
-    const loginResult = await apiPost({
-        step: 'login_and_get_cars',
-        user: email,
-        pass: pass
-    });
-
-    if (loginResult.status === 'success') {
-        sessionId = loginResult.session_id;
-        carListRaw = loginResult.cars || [];
-
-        showStatus('loginStatus', `✅ LOGIN BERHASIL! Session: ${sessionId}`, 'success');
-        document.getElementById('carListSection').classList.remove('hidden');
-        document.getElementById('sessionIdDisplay').textContent = sessionId;
-        document.getElementById('totalCarsLabel').textContent = `(${carListRaw.length} Kendaraan)`;
-
-        renderCarList(carListRaw);
-        showToast(`✅ Garasi berhasil dimuat! (${carListRaw.length} mobil)`, 'success');
-    } else {
-        showStatus('loginStatus', `❌ ${loginResult.error || 'Login atau ambil garasi gagal!'}`, 'error');
-        showToast('❌ Gagal login akun!', 'error');
-    }
-    setLoading('loginBtn', false);
-}
-
-function renderCarList(cars) {
+function renderCars(cars) {
     const container = document.getElementById('carListContainer');
     container.innerHTML = '';
+    if (cars.length === 0) { container.innerHTML = '<div class="text-muted">Tidak ada mobil di garasi</div>'; return; }
 
-    if (!cars || cars.length === 0) {
-        container.innerHTML = '<div class="text-muted">Tidak ada mobil ditemukan</div>';
-        return;
-    }
-
-    cars.forEach((car, index) => {
+    cars.forEach(car => {
         const div = document.createElement('div');
-        div.className = `car-item`;
-        div.innerHTML = `<span>${car.display || car.__desc_id || 'Car ' + index}</span>`;
-        div.onclick = () => selectCar(car);
+        div.className = 'car-item';
+        div.innerHTML = car.display;
+        div.onclick = () => {
+            document.querySelectorAll('.car-item').forEach(i => i.classList.remove('selected'));
+            div.classList.add('selected');
+            selectedCarData = car;
+            document.getElementById('selectedCarName').value = `${car.display} (ID: ${car.id})`;
+            document.getElementById('tuningPanelCard').classList.remove('hidden');
+            showToast('🚗 Mobil dipilih!', 'info');
+        };
         container.appendChild(div);
     });
-
-    selectCar(cars[0]);
 }
 
-function selectCar(carObj) {
-    selectedCarObject = carObj;
-    document.getElementById('selectedCar').value = `${carObj.__desc_id || 'Car'} [Slot ID: ${carObj.id}]`;
-    document.getElementById('tuningSection').classList.remove('hidden');
-    showToast(`🚗 Mobil terpilih`, 'info');
-}
+async function handleApplyTune() {
+    if (!currentSessionId || !selectedCarData) { showToast('⚠️ Pilih mobil dulu!', 'error'); return; }
 
-// ================================================================
-// ⚙️ TERAPKAN MODULAR TUNING
-// ================================================================
-async function handleApplyModularTune() {
-    if (!sessionId) { showToast('⚠️ Sesi habis, login ulang!', 'error'); return; }
-    if (!selectedCarObject) { showToast('⚠️ Pilih mobil terlebih dahulu!', 'error'); return; }
-
-    const payloadData = {
+    const payload = {
         step: 'tune_existing_car',
-        session_id: sessionId,
-        car_id: selectedCarObject.id,
-        
+        session_id: currentSessionId,
+        car_id: selectedCarData.id,
         body_mass: document.getElementById('bodyMass').value,
         body_front_downforce: document.getElementById('aeroFront').value,
         body_rear_downforce: document.getElementById('aeroRear').value,
         bodi_action: document.getElementById('actionLepasBodi').checked ? 'lepas_bodi' : '',
-
-        suspension_front_stiffness: document.getElementById('susFrontStiff').value,
-        suspension_rear_stiffness: document.getElementById('susRearStiff').value,
-        suspension_front_camber: document.getElementById('susCamber').value,
-        brake_max_torque: document.getElementById('brakeMaxTorque').value,
-
-        throttle_limit: document.getElementById('throttleLimit').value,
         engine_turbo_pressure: document.getElementById('engineTurbo').value,
-
-        wheel_front_tyre_pressure: document.getElementById('tyrePressFront').value,
-        wheel_rear_tyre_pressure: document.getElementById('tyrePressRear').value,
-        wheel_front_base_width_offset: document.getElementById('wheelOffset').value,
-
-        swap_gearbox: document.getElementById('swapGearbox').value,
-        gear_shifting_delay: document.getElementById('shiftDelay').value
+        swap_engine: document.getElementById('swapEngine').value,
+        wheel_front_tyre_pressure: document.getElementById('tyreFront').value,
+        wheel_rear_tyre_pressure: document.getElementById('tyreRear').value
     };
 
-    showStatus('tuningStatus', '⏳ Menyinkronkan modular tuning ke server...', 'info');
-    setLoading('applyTuneBtn', true);
+    showStatus('applyStatus', '⏳ Menyinkronkan tuning ke server game...', 'info');
+    const res = await apiCall(payload);
 
-    const result = await apiPost(payloadData);
-
-    if (result.status === 'success') {
-        showStatus('tuningStatus', `✅ ${result.message}`, 'success');
+    if (res.status === 'success') {
+        showStatus('applyStatus', `✅ ${res.message}`, 'success');
         showToast('🎉 Modular tuning sukses diterapkan!', 'success');
     } else {
-        showStatus('tuningStatus', `❌ ${result.error || 'Gagal sinkronisasi!'}`, 'error');
+        showStatus('applyStatus', `❌ ${res.error || 'Gagal sinkronisasi'}`, 'error');
         showToast('❌ Gagal menerapkan tuning!', 'error');
     }
-    setLoading('applyTuneBtn', false);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.btn').forEach(btn => {
-        btn.dataset.original = btn.innerHTML;
-    });
-});
+async function handleRegister() {
+    const payload = {
+        step: 'register_overwrite',
+        email: document.getElementById('regEmail').value,
+        pass: document.getElementById('regPass').value,
+        silver: document.getElementById('regSilver').value,
+        gold: document.getElementById('regGold').value
+    };
+    showStatus('regStatus', '⏳ Proses register akun...', 'info');
+    const res = await apiCall(payload);
+    if (res.status === 'success') {
+        showStatus('regStatus', `✅ ${res.message}`, 'success');
+        showToast('🎉 Register sukses!', 'success');
+    } else {
+        showStatus('regStatus', `❌ ${res.error}`, 'error');
+        showToast('❌ Register gagal!', 'error');
+    }
+}
+
+async function handleCloudBackup() {
+    const res = await apiCall({ step: 'cloud_backup', user: document.getElementById('bkEmail').value, pass: document.getElementById('bkPass').value });
+    if (res.status === 'success') { showStatus('bkStatus', `✅ ${res.message}`, 'success'); showToast('🎉 Backup sukses!', 'success'); }
+    else { showStatus('bkStatus', `❌ ${res.error}`, 'error'); showToast('❌ Backup gagal!', 'error'); }
+}
+
+async function handleUnban() {
+    const res = await apiCall({ step: 'auto_self_healing', user: document.getElementById('ubEmail').value });
+    if (res.status === 'success') { showStatus('ubStatus', `✅ ${res.message}`, 'success'); showToast('🎉 Unban sukses!', 'success'); }
+    else { showStatus('ubStatus', `❌ ${res.error}`, 'error'); showToast('❌ Unban gagal!', 'error'); }
+}
+
+async function handleCloneAccount() {
+    const payload = {
+        step: 'noname',
+        target_email: document.getElementById('clTargetEmail').value,
+        target_pass: document.getElementById('clTargetPass').value,
+        new_email: document.getElementById('clNewEmail').value,
+        new_pass: document.getElementById('clNewPass').value
+    };
+    const res = await apiCall(payload);
+    if (res.status === 'success') { showStatus('clStatus', `✅ ${res.message}`, 'success'); showToast('👑 Kloning sukses!', 'success'); }
+    else { showStatus('clStatus', `❌ ${res.error}`, 'error'); showToast('❌ Kloning gagal!', 'error'); }
+}
 </script>
 
 </body>
