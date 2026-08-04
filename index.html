@@ -56,7 +56,7 @@
             margin-bottom: 4px;
             font-weight: 600;
         }
-        .form-group input, .form-group select {
+        .form-group input {
             padding: 8px 12px;
             border-radius: 8px;
             border: 1px solid rgba(255,255,255,0.1);
@@ -65,11 +65,12 @@
             font-size: 13px;
             transition: all 0.3s;
         }
-        .form-group input:focus, .form-group select:focus {
+        .form-group input:focus {
             outline: none;
             border-color: #f093fb;
             box-shadow: 0 0 20px rgba(240, 147, 251, 0.15);
         }
+        .form-group input::placeholder { color: #666; }
 
         .btn {
             padding: 10px 24px;
@@ -267,7 +268,7 @@
         <div id="loginStatus" class="hidden status-box"></div>
     </div>
 
-    <!-- TAB REGISTER -->
+    <!-- TAB REGISTER - FIXED (GAK PAKE NAMA) -->
     <div class="card hidden" id="registerSection">
         <div class="card-title gold">🆕 Auto Register</div>
         <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:12px;margin-bottom:15px;border-left:3px solid #f6d365;">
@@ -278,16 +279,26 @@
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label>👤 Nama</label>
-                <input type="text" id="regName" placeholder="Contoh: JohnDoe" value="User">
-            </div>
-            <div class="form-group">
                 <label>🔑 Password</label>
                 <input type="password" id="regPassword" placeholder="Password" value="Rahasia123">
             </div>
             <div class="form-group">
-                <label>🎫 VIP Key</label>
+                <label>🎫 VIP Key (opsional)</label>
                 <input type="text" id="regVipKey" placeholder="VIP Key" value="TEST_KEY_123">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>🪙 Silver (opsional)</label>
+                <input type="number" id="regSilver" value="9999999" min="0">
+            </div>
+            <div class="form-group">
+                <label>💰 Gold (opsional)</label>
+                <input type="number" id="regGold" value="999999" min="0">
+            </div>
+            <div class="form-group">
+                <label>⭐ EXP (opsional)</label>
+                <input type="number" id="regExp" value="999999" min="0">
             </div>
         </div>
         <button class="btn btn-warning btn-block" id="registerBtn" onclick="handleRegister()">🚀 Register & Inject</button>
@@ -484,15 +495,17 @@ async function callBackend(step, data) {
 }
 
 // ================================================================
-// 🆕 REGISTER
+// 🆕 REGISTER (TANPA NAMA - SESUAI KODE REGISTER ASLI)
 // ================================================================
 async function handleRegister() {
-    const name = getVal('regName');
     const password = getVal('regPassword');
     const vipKey = getVal('regVipKey');
+    const silver = getNum('regSilver');
+    const gold = getNum('regGold');
+    const exp = getNum('regExp');
 
-    if (!name || !password) {
-        showToast('⚠️ Nama dan Password wajib diisi!', 'error');
+    if (!password) {
+        showToast('⚠️ Password wajib diisi!', 'error');
         return;
     }
 
@@ -501,18 +514,20 @@ async function handleRegister() {
 
     try {
         const result = await callBackend('register', {
-            custom_name: name,
             password: password,
+            silver: silver,
+            gold: gold,
+            exp: exp,
             vip_key: vipKey
         });
 
-        if (result.success) {
+        if (result.status === true) {
             const data = result.data;
             showStatus('registerStatus', `
-✅ REGISTER SUKSES!
+✅ <strong>REGISTER SUKSES!</strong>
 📧 Email: ${data.email}
 🔑 Password: ${data.password}
-👤 Username: ${data.username}
+👤 Username: ${data.carx_id}
 🪙 Silver: ${data.silver}
 💰 Gold: ${data.gold}
 ⭐ EXP: ${data.exp}
@@ -525,7 +540,7 @@ async function handleRegister() {
             document.getElementById('loginPassword').value = data.password;
             switchTab('login');
         } else {
-            showStatus('registerStatus', `❌ ${result.error || 'Register gagal!'}`, 'error');
+            showStatus('registerStatus', `❌ ${result.message || result.error || 'Register gagal!'}`, 'error');
             showToast('❌ Register gagal!', 'error');
         }
     } catch (err) {
@@ -806,7 +821,7 @@ document.addEventListener('keydown', function(e) {
         if (active && (active.id === 'loginEmail' || active.id === 'loginPassword')) {
             handleLogin();
         }
-        if (active && (active.id === 'regName' || active.id === 'regPassword')) {
+        if (active && (active.id === 'regPassword')) {
             handleRegister();
         }
     }
