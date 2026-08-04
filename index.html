@@ -407,7 +407,7 @@
 
 <script>
 // ================================================================
-// 🔧 URL GATEWAY SUPABASE (WAJIB KE GATEWAY, BUKAN LANGSUNG KE TUNING)
+// 🔧 URL GATEWAY SUPABASE
 // ================================================================
 const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/dasbor_tuning';
 
@@ -449,7 +449,7 @@ function switchTab(tab) {
 }
 
 // ================================================================
-// 🛡️ HELPER FETCH KORIDOR GATEWAY (ANTI FAILED TO FETCH)
+// 🛡️ HELPER FETCH KORIDOR GATEWAY
 // ================================================================
 async function apiPost(payloadData) {
     try {
@@ -580,7 +580,7 @@ function renderCarList(cars) {
     cars.forEach((car, index) => {
         const div = document.createElement('div');
         div.className = `car-item`;
-        div.innerHTML = `<span>🏎️ ${car.__desc_id || 'Car ' + index}</span>`;
+        div.innerHTML = `<span>🏎️ ${car.__desc_id || 'Car ' + index} (ID: ${car.id})</span>`;
         div.onclick = () => selectCar(car);
         container.appendChild(div);
     });
@@ -590,22 +590,22 @@ function renderCarList(cars) {
 
 function selectCar(carObj) {
     selectedCarObject = carObj;
-    document.getElementById('selectedCar').value = `${carObj.__desc_id}`;
+    document.getElementById('selectedCar').value = `${carObj.__desc_id} [Slot ID: ${carObj.id}]`;
     document.getElementById('tuningSection').classList.remove('hidden');
     showToast(`🚗 Mobil ${carObj.__desc_id} terpilih`, 'info');
 }
 
 // ================================================================
-// ⚙️ TERAPKAN MODULAR TUNING (5 MENU)
+// ⚙️ TERAPKAN MODULAR TUNING (5 MENU - FIXED STEP & CAR_ID)
 // ================================================================
 async function handleApplyModularTune() {
     if (!sessionId) { showToast('⚠️ Sesi habis, login ulang!', 'error'); return; }
     if (!selectedCarObject) { showToast('⚠️ Pilih mobil terlebih dahulu!', 'error'); return; }
 
     const payloadData = {
-        step: 'append_sultan_cars',
+        step: 'tune_existing_car',          // 👈 STEP DISAMAKAN DENGAN BACKEND
         session_id: sessionId,
-        data_mobil_tunggal: selectedCarObject,
+        car_id: selectedCarObject.id,       // 👈 KIRIM SLOT ID GARASI MOBIL YANG DIPILIH
         
         body_mass: document.getElementById('bodyMass').value,
         body_front_downforce: document.getElementById('aeroFront').value,
