@@ -33,6 +33,7 @@
             background: rgba(255,255,255,0.07); color: #fff; font-size: 13px;
         }
         .btn { padding: 10px 20px; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; text-transform: uppercase; transition: all 0.3s; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-block { width: 100%; }
         .btn-primary { background: linear-gradient(45deg, #f093fb, #f5576c); color: #fff; }
         .btn-success { background: linear-gradient(45deg, #4facfe, #00f2fe); color: #fff; }
@@ -58,6 +59,8 @@
         .toast { position: fixed; bottom: 30px; right: 30px; padding: 14px 24px; border-radius: 12px; background: #333; color: #fff; transform: translateY(120px); opacity: 0; transition: all 0.5s; z-index: 1000; font-size: 14px; }
         .toast.show { transform: translateY(0); opacity: 1; }
         .toast.success { background: #00c853; } .toast.error { background: #d50000; } .toast.info { background: #2979ff; }
+        .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -65,7 +68,7 @@
 <div class="container">
     <div class="header">
         <h1>🏎️ CarX VVIP Master Control</h1>
-        <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Panel Modular Tuning, Register, & Cloud VVIP</p>
+        <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Panel Modular Tuning & Auto Register Temp Mail</p>
     </div>
 
     <!-- GLOBAL KEY AUTH -->
@@ -82,7 +85,7 @@
     <!-- TAB NAVIGATION -->
     <div class="tab-group">
         <button class="tab-btn active" onclick="switchTab('tuning')">⚙️ Tuning Garasi</button>
-        <button class="tab-btn" onclick="switchTab('register')">🆕 Register Akun</button>
+        <button class="tab-btn" onclick="switchTab('register')">🆕 Auto Register</button>
         <button class="tab-btn" onclick="switchTab('backup')">💾 Cloud Backup</button>
         <button class="tab-btn" onclick="switchTab('unban')">☣️ Unban / Self-Healing</button>
         <button class="tab-btn" onclick="switchTab('clone')">👑 Kloning Akun</button>
@@ -95,7 +98,7 @@
             <div class="form-group"><label>📧 Email Akun Game</label><input type="email" id="tuneEmail" placeholder="email@gmail.com"></div>
             <div class="form-group"><label>🔑 Password Akun Game</label><input type="password" id="tunePass" placeholder="Password"></div>
         </div>
-        <button class="btn btn-primary btn-block" onclick="handleLoginAndGetCars()">🚀 Login & Tarik Garasi</button>
+        <button class="btn btn-primary btn-block" id="loginBtn" onclick="handleLoginAndGetCars()">🚀 Login & Tarik Garasi</button>
         <div id="tuneLoginStatus" class="hidden status-box"></div>
 
         <!-- LIST MOBIL -->
@@ -150,23 +153,20 @@
                 </div>
             </div>
 
-            <button class="btn btn-success btn-block" onclick="handleApplyTune()">🚀 Terapkan Modular Tuning ke Mobil Ini</button>
+            <button class="btn btn-success btn-block" id="applyTuneBtn" onclick="handleApplyTune()">🚀 Terapkan Modular Tuning ke Mobil Ini</button>
             <div id="applyStatus" class="hidden status-box"></div>
         </div>
     </div>
 
-    <!-- TAB 2: REGISTER AKUN -->
+    <!-- TAB 2: AUTO REGISTER (TEMP MAIL) -->
     <div class="card hidden" id="section-register">
-        <div class="card-title gold">🆕 Auto Register Akun Baru & Injeksi Data</div>
+        <div class="card-title gold">🆕 Auto Register Akun Baru (Temp Mail + Injeksi Sultan)</div>
         <div class="form-row">
-            <div class="form-group"><label>Email Baru</label><input type="email" id="regEmail" placeholder="email@gmail.com"></div>
-            <div class="form-group"><label>Password Baru</label><input type="password" id="regPass" placeholder="Password"></div>
-        </div>
-        <div class="form-row">
+            <div class="form-group"><label>Password Baru Akun</label><input type="password" id="regPassword" placeholder="Password" value="Rahasia123"></div>
             <div class="form-group"><label>Silver</label><input type="number" id="regSilver" value="9999999"></div>
             <div class="form-group"><label>Gold</label><input type="number" id="regGold" value="999999"></div>
         </div>
-        <button class="btn btn-warning btn-block" onclick="handleRegister()">🚀 Proses Register</button>
+        <button class="btn btn-warning btn-block" id="regBtn" onclick="handleRegister()">🚀 Proses Auto Register & Injeksi</button>
         <div id="regStatus" class="hidden status-box"></div>
     </div>
 
@@ -237,6 +237,18 @@ function switchTab(tabName) {
     });
 }
 
+function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    if (loading) {
+        btn.disabled = true;
+        btn.dataset.original = btn.innerHTML;
+        btn.innerHTML = '<span class="loading"></span> Processing...';
+    } else {
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.original || 'Submit';
+    }
+}
+
 async function apiCall(payload) {
     const vipKey = document.getElementById('globalVipKey').value.trim();
     if (!vipKey) { showToast('⚠️ Masukkan Key VVIP!', 'error'); return { error: "Key kosong" }; }
@@ -260,19 +272,29 @@ async function handleLoginAndGetCars() {
     if (!email || !pass) { showToast('⚠️ Email & Password wajib diisi!', 'error'); return; }
 
     showStatus('tuneLoginStatus', '⏳ Menghubungkan & menarik garasi...', 'info');
+    setLoading('loginBtn', true);
+    
     const res = await apiCall({ step: 'login_and_get_cars', user: email, pass: pass });
 
     if (res.status === 'success') {
-        currentSessionId = res.session_id;
+        currentSessionId = res.session_id || res.sessionId;
+        
+        if (!currentSessionId) {
+            showStatus('tuneLoginStatus', '❌ Session ID dari server kosong!', 'error');
+            setLoading('loginBtn', false);
+            return;
+        }
+
         document.getElementById('sessionIdText').textContent = currentSessionId;
         document.getElementById('carListCard').classList.remove('hidden');
-        showStatus('tuneLoginStatus', `✅ Login Sukses! Ditemukan ${(res.cars || []).length} mobil.`, 'success');
+        showStatus('tuneLoginStatus', `✅ Login Sukses! Session: ${currentSessionId} | Ditemukan ${(res.cars || []).length} mobil.`, 'success');
         renderCars(res.cars || []);
         showToast('✅ Garasi berhasil dimuat!', 'success');
     } else {
         showStatus('tuneLoginStatus', `❌ ${res.error || 'Gagal login!'}`, 'error');
         showToast('❌ Gagal login!', 'error');
     }
+    setLoading('loginBtn', false);
 }
 
 function renderCars(cars) {
@@ -314,6 +336,8 @@ async function handleApplyTune() {
     };
 
     showStatus('applyStatus', '⏳ Menyinkronkan tuning ke server game...', 'info');
+    setLoading('applyTuneBtn', true);
+
     const res = await apiCall(payload);
 
     if (res.status === 'success') {
@@ -323,25 +347,47 @@ async function handleApplyTune() {
         showStatus('applyStatus', `❌ ${res.error || 'Gagal sinkronisasi'}`, 'error');
         showToast('❌ Gagal menerapkan tuning!', 'error');
     }
+    setLoading('applyTuneBtn', false);
 }
 
 async function handleRegister() {
-    const payload = {
-        step: 'register_overwrite',
-        email: document.getElementById('regEmail').value,
-        pass: document.getElementById('regPass').value,
-        silver: document.getElementById('regSilver').value,
-        gold: document.getElementById('regGold').value
-    };
-    showStatus('regStatus', '⏳ Proses register akun...', 'info');
-    const res = await apiCall(payload);
-    if (res.status === 'success') {
-        showStatus('regStatus', `✅ ${res.message}`, 'success');
-        showToast('🎉 Register sukses!', 'success');
+    const password = document.getElementById('regPassword').value;
+    const silver = document.getElementById('regSilver').value;
+    const gold = document.getElementById('regGold').value;
+
+    if (!password) { showToast('⚠️ Password wajib diisi!', 'error'); return; }
+
+    showStatus('regStatus', '⏳ Auto generate email temp, polling OTP, & inject sultan (±10 detik)...', 'info');
+    setLoading('regBtn', true);
+
+    const res = await apiCall({
+        step: 'register',
+        password: password,
+        silver: Number(silver),
+        gold: Number(gold)
+    });
+
+    if (res.status === true || res.status === 'success') {
+        const acc = res.data || {};
+        showStatus('regStatus', `
+✅ AUTO REGISTER & INJEKSI SUKSES!
+📧 Email: ${acc.email || 'Otomatis'}
+🔑 Password: ${acc.password || password}
+👤 Nick: ${acc.carx_id || 'Sultan'}
+
+💡 Email & password otomatis tersalin ke menu Login Tuning!
+        `, 'success');
+        showToast('🎉 Akun baru sultan berhasil dibuat!', 'success');
+
+        if (acc.email) {
+            document.getElementById('tuneEmail').value = acc.email;
+            document.getElementById('tunePass').value = acc.password || password;
+        }
     } else {
-        showStatus('regStatus', `❌ ${res.error}`, 'error');
+        showStatus('regStatus', `❌ ${res.message || res.error || 'Gagal register!'}`, 'error');
         showToast('❌ Register gagal!', 'error');
     }
+    setLoading('regBtn', false);
 }
 
 async function handleCloudBackup() {
