@@ -68,7 +68,7 @@
 <div class="container">
     <div class="header">
         <h1>🏎️ CarX VVIP Master Control</h1>
-        <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Panel Modular Tuning & Auto Register Temp Mail</p>
+        <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Panel Ultimate Tuning & Auto Register Temp Mail</p>
     </div>
 
     <!-- GLOBAL KEY AUTH -->
@@ -84,16 +84,16 @@
 
     <!-- TAB NAVIGATION -->
     <div class="tab-group">
-        <button class="tab-btn active" onclick="switchTab('tuning')">⚙️ Tuning Garasi</button>
+        <button class="tab-btn active" onclick="switchTab('tuning')">⚙️ Ultimate Tuning Garasi</button>
         <button class="tab-btn" onclick="switchTab('register')">🆕 Auto Register</button>
         <button class="tab-btn" onclick="switchTab('backup')">💾 Cloud Backup</button>
         <button class="tab-btn" onclick="switchTab('unban')">☣️ Unban / Self-Healing</button>
         <button class="tab-btn" onclick="switchTab('clone')">👑 Kloning Akun</button>
     </div>
 
-    <!-- TAB 1: MODULAR TUNING GARASI -->
+    <!-- TAB 1: ULTIMATE TUNING GARASI -->
     <div class="card" id="section-tuning">
-        <div class="card-title blue">1️⃣ Login & Pilih Mobil Garasi untuk Dimodifikasi</div>
+        <div class="card-title blue">1️⃣ Login & Pilih Mobil Garasi untuk Ultimate Tuning</div>
         <div class="form-row">
             <div class="form-group"><label>📧 Email Akun Game</label><input type="email" id="tuneEmail" placeholder="email@gmail.com"></div>
             <div class="form-group"><label>🔑 Password Akun Game</label><input type="password" id="tunePass" placeholder="Password"></div>
@@ -108,52 +108,57 @@
             <div class="mt-10 text-muted">Session ID: <strong id="sessionIdText">-</strong></div>
         </div>
 
-        <!-- PANEL PARAMETER TUNING -->
+        <!-- PANEL PARAMETER ULTIMATE TUNING -->
         <div class="hidden mt-10" id="tuningPanelCard">
-            <div class="card-title gold mt-10">🎛️ Panel Parameter Tuning Mobil Terpilih</div>
+            <div class="card-title gold mt-10">🎛️ Panel Parameter Ultimate Tuning Mobil Terpilih</div>
             <div class="form-row">
                 <div class="form-group"><label>🚗 Terpilih</label><input type="text" id="selectedCarName" readonly style="background:rgba(255,255,255,0.03);"></div>
             </div>
 
-            <!-- Bodi -->
+            <!-- Fitur Unlock & Trondol Bodi -->
             <div class="tune-section">
+                <div class="label pink">Menu Body Kit & Trondol Sisa Tulangan</div>
+                <div class="form-row" style="margin-top:8px;">
+                    <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="actionUnlockKits"> 🔓 Unlock Semua Body Kit Langka</label>
+                </div>
+                <div style="margin-top:8px;">
+                    <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="actionLepasBodi"> 🛠️ Trondol Bodi Luar (Sisakan Sasis, Tulangan & Interior)</label>
+                </div>
+            </div>
+
+            <!-- Bodi & Downforce -->
+            <div class="tune-section" style="border-left-color:#f5576c;">
                 <div class="label pink">Menu Bodi & Downforce</div>
                 <div class="form-row">
                     <div class="form-group"><label>Berat Massa</label><input type="number" id="bodyMass" value="1200"></div>
                     <div class="form-group"><label>Aero Depan</label><input type="number" id="aeroFront" value="-0.2" step="0.1"></div>
                     <div class="form-group"><label>Aero Belakang</label><input type="number" id="aeroRear" value="1.5" step="0.1"></div>
                 </div>
-                <div style="margin-top:8px;">
-                    <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="actionLepasBodi"> 🛠️ Lepas Bodi (Bonnet, Bumper, Dll / Trodol)</label>
-                </div>
             </div>
 
-            <!-- Mesin & ECU -->
+            <!-- Mesin & Turbo -->
             <div class="tune-section" style="border-left-color:#00c853;">
-                <div class="label green">Menu Mesin & ECU</div>
+                <div class="label green">Menu Mesin, Turbo & RPM</div>
                 <div class="form-row">
-                    <div class="form-group"><label>Turbo Pressure / Torsi</label><input type="number" id="engineTurbo" value="2.5" step="0.1"></div>
-                    <div class="form-group">
-                        <label>Swap Engine</label>
-                        <select id="swapEngine">
-                            <option value="ORI">-- Tetap / ORI --</option>
-                            <option value="engine_v8_supercharged">V8 Supercharged</option>
-                            <option value="engine_jz2_swap">2JZ-GTE Swap</option>
-                        </select>
-                    </div>
+                    <div class="form-group"><label>Turbo Boost Pressure</label><input type="number" id="turboBoost" value="3.5" step="0.1"></div>
+                    <div class="form-group"><label>Rev Limiter (RPM)</label><input type="number" id="revLimiter" value="9500"></div>
                 </div>
             </div>
 
-            <!-- Ban -->
+            <!-- Kaki-Kaki, Long Arm & Ban -->
             <div class="tune-section" style="border-left-color:#f6d365;">
-                <div class="label gold">Menu Tekanan Ban</div>
+                <div class="label gold">Menu Kaki-Kaki, Long Arm (Swing Arm) & Ban</div>
                 <div class="form-row">
+                    <div class="form-group"><label>Long Arm / Sasis Belakang (Offset)</label><input type="number" id="longArmOffset" value="0.8" step="0.1"></div>
+                    <div class="form-group"><label>Steering Lock (Sudut Drift)</label><input type="number" id="steeringLock" value="70"></div>
+                </div>
+                <div class="form-row mt-10">
                     <div class="form-group"><label>Tekanan Ban Depan</label><input type="number" id="tyreFront" value="1.5" step="0.1"></div>
                     <div class="form-group"><label>Tekanan Ban Belakang</label><input type="number" id="tyreRear" value="1.5" step="0.1"></div>
                 </div>
             </div>
 
-            <button class="btn btn-success btn-block" id="applyTuneBtn" onclick="handleApplyTune()">🚀 Terapkan Modular Tuning ke Mobil Ini</button>
+            <button class="btn btn-success btn-block" id="applyTuneBtn" onclick="handleApplyTune()">🚀 Terapkan Ultimate Tuning ke Mobil Ini</button>
             <div id="applyStatus" class="hidden status-box"></div>
         </div>
     </div>
@@ -321,26 +326,32 @@ function renderCars(cars) {
 async function handleApplyTune() {
     if (!currentSessionId || !selectedCarData) { showToast('⚠️ Pilih mobil dulu!', 'error'); return; }
 
+    // 🎯 MENGIRIM SEMUA PARAMETER ULTIMATE TUNING KE BACKEND
     const payload = {
         step: 'edit_existing_car',
         session_id: currentSessionId,
         car_id_pilihan: selectedCarData.id,
+        unlock_bodykits: document.getElementById('actionUnlockKits').checked,
+        bodi_action: document.getElementById('actionLepasBodi').checked ? 'lepas_bodi' : '',
         input_mass_engine: document.getElementById('bodyMass').value,
         body_front_downforce: document.getElementById('aeroFront').value,
         body_rear_downforce: document.getElementById('aeroRear').value,
+        turbo_boost: document.getElementById('turboBoost').value,
+        rev_limiter: document.getElementById('revLimiter').value,
+        long_arm_offset: document.getElementById('longArmOffset').value,
+        steering_lock: document.getElementById('steeringLock').value,
         wheel_front_tyre_pressure: document.getElementById('tyreFront').value,
-        wheel_rear_tyre_pressure: document.getElementById('tyreRear').value,
-        bodi_action: document.getElementById('actionLepasBodi').checked ? 'lepas_bodi' : ''
+        wheel_rear_tyre_pressure: document.getElementById('tyreRear').value
     };
 
-    showStatus('applyStatus', '⏳ Menyinkronkan tuning ke server game...', 'info');
+    showStatus('applyStatus', '⏳ Menyinkronkan ultimate tuning ke server game...', 'info');
     setLoading('applyTuneBtn', true);
 
     const res = await apiCall(payload);
 
     if (res.status === 'success') {
         showStatus('applyStatus', `✅ ${res.message}`, 'success');
-        showToast('🎉 Modular tuning sukses diterapkan!', 'success');
+        showToast('🎉 Ultimate tuning sukses diterapkan!', 'success');
     } else {
         showStatus('applyStatus', `❌ ${res.error || 'Gagal sinkronisasi'}`, 'error');
         showToast('❌ Gagal menerapkan tuning!', 'error');
