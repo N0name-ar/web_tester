@@ -3,363 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏎️ CarX VVIP Master Control & Ultimate Tuning</title>
+    <title>🛠️ Backend API Tester - CarX VVIP</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            color: #fff; min-height: 100vh; padding: 20px;
-        }
-        .container { max-width: 1100px; margin: 0 auto; }
-        .header { text-align: center; padding: 15px 0 25px; }
-        .header h1 {
-            font-size: 2.3em;
-            background: linear-gradient(45deg, #f093fb, #f5576c);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .card {
-            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
-            border-radius: 16px; padding: 20px 25px; margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        .card-title { font-size: 1.1em; margin-bottom: 15px; font-weight: 600; }
-        .pink { color: #f093fb; } .gold { color: #f6d365; } .blue { color: #4facfe; } .green { color: #00c853; }
-        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 0.75em; color: #aaa; margin-bottom: 4px; font-weight: 600; }
-        .form-group input, .form-group select {
-            padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.07); color: #fff; font-size: 13px;
-        }
-        .btn { padding: 12px 20px; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; text-transform: uppercase; transition: all 0.3s; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-block { width: 100%; margin-top: 10px; }
-        .btn-primary { background: linear-gradient(45deg, #f093fb, #f5576c); color: #fff; }
-        .btn-success { background: linear-gradient(45deg, #4facfe, #00f2fe); color: #fff; }
-        .btn-warning { background: linear-gradient(45deg, #f6d365, #fda085); color: #333; }
-        .tab-group { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
-        .tab-btn {
-            padding: 8px 16px; border: 2px solid rgba(255,255,255,0.1); border-radius: 10px;
-            background: transparent; color: #888; cursor: pointer; font-weight: 600; font-size: 13px;
-        }
-        .tab-btn.active { border-color: #f093fb; color: #f093fb; background: rgba(240,147,251,0.1); }
-        .hidden { display: none !important; }
-        .mt-10 { margin-top: 10px; }
-        .text-muted { color: #888; font-size: 0.85em; }
-        .car-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; max-height: 220px; overflow-y: auto; padding: 4px; }
-        .car-item { background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; font-size: 12px; }
-        .car-item:hover { background: rgba(255,255,255,0.1); }
-        .car-item.selected { border-color: #f093fb; background: rgba(240, 147, 251, 0.15); }
-        .tune-section { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 12px; margin-bottom: 12px; border-left: 3px solid #4facfe; }
-        .status-box { padding: 12px 16px; border-radius: 10px; margin-top: 10px; font-size: 13px; white-space: pre-wrap; max-height: 300px; overflow: auto; }
-        .status-box.success { background: rgba(0,200,83,0.12); border: 1px solid rgba(0,200,83,0.3); }
-        .status-box.error { background: rgba(213,0,0,0.12); border: 1px solid rgba(213,0,0,0.3); }
-        .status-box.info { background: rgba(41,121,255,0.12); border: 1px solid rgba(41,121,255,0.3); }
-        .toast { position: fixed; bottom: 30px; right: 30px; padding: 14px 24px; border-radius: 12px; background: #333; color: #fff; transform: translateY(120px); opacity: 0; transition: all 0.5s; z-index: 1000; font-size: 14px; }
-        .toast.show { transform: translateY(0); opacity: 1; }
-        .toast.success { background: #00c853; } .toast.error { background: #d50000; } .toast.info { background: #2979ff; }
-        .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        body { font-family: 'Courier New', Courier, monospace; background: #0c0c0c; color: #00ff66; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h2 { color: #fff; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .box { background: #141414; border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        label { display: block; font-size: 0.85em; color: #888; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 10px; background: #1f1f1f; border: 1px solid #444; color: #fff; border-radius: 6px; font-family: monospace; margin-bottom: 10px; }
+        textarea { height: 120px; resize: vertical; }
+        button { background: #00ff66; color: #000; border: none; padding: 12px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 100%; text-transform: uppercase; }
+        button:hover { background: #00cc55; }
+        pre { background: #111; border: 1px solid #222; padding: 12px; border-radius: 6px; overflow-x: auto; color: #ff0055; font-size: 0.9em; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <h1>🏎️ CarX VVIP Master Control</h1>
-        <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Panel Ultimate Tuning & Auto Register</p>
+    <h2>🛠️ CarX Cloud Backend API Tester</h2>
+
+    <!-- BOX 1: LOGIN / AMBIL SESI -->
+    <div class="box">
+        <label>1️⃣ Login & Dapatkan Session ID</label>
+        <div class="row">
+            <input type="email" id="testEmail" placeholder="Email Game">
+            <input type="password" id="testPass" placeholder="Password Game">
+        </div>
+        <button onclick="testLogin()">🔑 Eksekusi Login & Get Cars</button>
     </div>
 
-    <!-- TAB NAVIGATION -->
-    <div class="tab-group">
-        <button class="tab-btn active" onclick="switchTab('tuning')">⚙️ Ultimate Tuning Garasi</button>
-        <button class="tab-btn" onclick="switchTab('register')">🆕 Auto Register</button>
+    <!-- BOX 2: TEMBAK PAYLOAD BEBAS -->
+    <div class="box">
+        <label>2️⃣ Parameter & Payload Tester</label>
+        <div class="row">
+            <div>
+                <label>Step Action:</label>
+                <input type="text" id="testStep" value="edit_existing_car">
+            </div>
+            <div>
+                <label>Session ID:</label>
+                <input type="text" id="testSessionId" placeholder="Masukkan Session ID hasil login">
+            </div>
+        </div>
+        <label>Payload JSON Tambahan (Opsional):</label>
+        <textarea id="testPayload">{
+  "car_id_pilihan": "0",
+  "unlock_bodykits": true,
+  "bodi_action": "lepas_bodi",
+  "body_mass": 1200,
+  "front_arm_length": 1.5,
+  "long_arm_offset": 1.5,
+  "steering_lock": 70
+}</textarea>
+        <button onclick="testApi()">🚀 Kirim Payload ke Backend</button>
     </div>
 
-    <!-- TAB 1: ULTIMATE TUNING GARASI -->
-    <div class="card" id="section-tuning">
-        <div class="card-title blue">1️⃣ Login & Pilih Mobil Garasi untuk Ultimate Tuning</div>
-        <div class="form-row">
-            <div class="form-group"><label>📧 Email Akun Game</label><input type="email" id="tuneEmail" placeholder="email@gmail.com"></div>
-            <div class="form-group"><label>🔑 Password Akun Game</label><input type="password" id="tunePass" placeholder="Password"></div>
-        </div>
-        <button class="btn btn-primary btn-block" id="loginBtn">🚀 Login & Tarik Garasi</button>
-        <div id="tuneLoginStatus" class="hidden status-box"></div>
-
-        <!-- LIST MOBIL -->
-        <div class="hidden mt-10" id="carListCard">
-            <div class="card-title green mt-10">🏎️ Daftar Mobil di Garasi</div>
-            <div id="carListContainer" class="car-list"></div>
-            <div class="mt-10 text-muted">Session ID: <strong id="sessionIdText">-</strong></div>
-        </div>
-
-        <!-- PANEL PARAMETER ULTIMATE TUNING -->
-        <div class="hidden mt-10" id="tuningPanelCard">
-            <div class="card-title gold mt-10">🎛️ Panel Parameter Ultimate Tuning Mobil Terpilih</div>
-            <div class="form-row">
-                <div class="form-group"><label>🚗 Terpilih</label><input type="text" id="selectedCarName" readonly style="background:rgba(255,255,255,0.03);"></div>
-            </div>
-
-            <!-- Fitur Unlock & Trondol Bodi -->
-            <div class="tune-section">
-                <div class="label pink" style="font-weight:600;margin-bottom:6px;">Menu Body Kit & Trondol Sisa Tulangan</div>
-                <div class="form-row" style="margin-top:4px;">
-                    <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="actionUnlockKits"> 🔓 Unlock Semua Body Kit (Auto-Detect)</label>
-                </div>
-                <div style="margin-top:6px;">
-                    <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="actionLepasBodi"> 🛠️ Trondol Bodi Luar (Sisakan Sasis & Interior)</label>
-                </div>
-            </div>
-
-            <!-- Mesin, Turbo, RPM, & Sensor Gas -->
-            <div class="tune-section" style="border-left-color:#00c853;">
-                <div class="label green" style="font-weight:600;margin-bottom:6px;">Menu Mesin, Turbo, RPM & Sensor Gas</div>
-                <div class="form-row">
-                    <div class="form-group"><label>Turbo Boost Pressure</label><input type="number" id="turboBoost" value="3.5" step="0.1"></div>
-                    <div class="form-group"><label>Rev Limiter (RPM)</label><input type="number" id="revLimiter" value="9500"></div>
-                </div>
-                <div class="form-row mt-10">
-                    <div class="form-group"><label>Sensor Gas (Respons Pedal)</label><input type="number" id="gasSensitivity" value="2.0" step="0.1"></div>
-                    <div class="form-group"><label>Berat Massa Mesin</label><input type="number" id="bodyMass" value="1200"></div>
-                    <div class="form-group"><label>Aero Depan Downforce</label><input type="number" id="aeroFront" value="-0.2" step="0.1"></div>
-                </div>
-            </div>
-
-            <!-- Kaki-Kaki, Dual Arm Lengkap, & Sensor Rem -->
-            <div class="tune-section" style="border-left-color:#f6d365;">
-                <div class="label gold" style="font-weight:600;margin-bottom:6px;">Menu Kaki-Kaki, Dual Arm (Depan & Belakang) & Sensor Rem</div>
-                <div class="form-row">
-                    <div class="form-group"><label>Long Arm Depan (Panjang Arm)</label><input type="number" id="frontArmLength" value="1.0" step="0.1"></div>
-                    <div class="form-group"><label>Long Arm Belakang (Offset Sasis)</label><input type="number" id="longArmOffset" value="1.2" step="0.1"></div>
-                </div>
-                <div class="form-row mt-10">
-                    <div class="form-group"><label>Steering Lock (Sudut Drift)</label><input type="number" id="steeringLock" value="70"></div>
-                    <div class="form-group"><label>Sensor Rem (Pakem Pedal)</label><input type="number" id="brakeSensitivity" value="2.0" step="0.1"></div>
-                </div>
-            </div>
-
-            <button class="btn btn-success btn-block" id="applyTuneBtn">🚀 Terapkan Ultimate Tuning ke Mobil Ini</button>
-            <div id="applyStatus" class="hidden status-box"></div>
-        </div>
-    </div>
-
-    <!-- TAB 2: AUTO REGISTER (TEMP MAIL) -->
-    <div class="card hidden" id="section-register">
-        <div class="card-title gold">🆕 Auto Register Akun Baru (Injeksi Vault Sultan)</div>
-        <div class="form-row">
-            <div class="form-group"><label>📧 Email Akun Baru</label><input type="email" id="regEmail" placeholder="sultan@gmail.com"></div>
-            <div class="form-group"><label>🔑 Password Akun Baru</label><input type="password" id="regPassword" placeholder="Password" value="Rahasia123"></div>
-        </div>
-        <div class="form-row mt-10">
-            <div class="form-group"><label>Silver</label><input type="number" id="regSilver" value="9999999"></div>
-            <div class="form-group"><label>Gold</label><input type="number" id="regGold" value="999999"></div>
-            <div class="form-group"><label>EXP</label><input type="number" id="regExp" value="500000"></div>
-        </div>
-        <button class="btn btn-warning btn-block" id="regBtn">🚀 Proses Auto Register & Injeksi Sultan</button>
-        <div id="regStatus" class="hidden status-box"></div>
+    <!-- BOX 3: LOG HASIL -->
+    <div class="box">
+        <label>📥 Respon Mentah dari Server:</label>
+        <pre id="responseLog">Menunggu eksekusi...</pre>
     </div>
 </div>
-
-<div id="toast" class="toast"></div>
 
 <script>
 const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/dasbor_tuning';
 
-let currentSessionId = null;
-let selectedCarData = null;
+async function testLogin() {
+    const email = document.getElementById('testEmail').value;
+    const pass = document.getElementById('testPass').value;
+    if(!email || !pass) { alert('Isi email & password!'); return; }
 
-function showToast(msg, type = 'info') {
-    const t = document.getElementById('toast');
-    if(!t) return;
-    t.textContent = msg; t.className = `toast ${type}`;
-    setTimeout(() => t.classList.add('show'), 100);
-    setTimeout(() => t.classList.remove('show'), 4000);
-}
-
-function showStatus(id, msg, type = 'info') {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.classList.remove('hidden'); 
-    el.className = `status-box ${type}`; 
-    el.innerHTML = msg;
-}
-
-function switchTab(tabName) {
-    ['tuning', 'register'].forEach(t => {
-        const el = document.getElementById(`section-${t}`);
-        if (el) el.classList.toggle('hidden', t !== tabName);
-    });
-    document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-        const tabs = ['tuning', 'register'];
-        btn.classList.toggle('active', tabs[idx] === tabName);
-    });
-}
-
-function setLoading(btnId, loading) {
-    const btn = document.getElementById(btnId);
-    if (!btn) return;
-    if (loading) {
-        btn.disabled = true;
-        btn.dataset.original = btn.innerHTML;
-        btn.innerHTML = '<span class="loading"></span> Processing...';
-    } else {
-        btn.disabled = false;
-        btn.innerHTML = btn.dataset.original || 'Submit';
-    }
-}
-
-async function apiCall(payload) {
+    document.getElementById('responseLog').textContent = '⏳ Menghubungkan...';
     try {
         const res = await fetch(GATEWAY_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth' },
-            body: JSON.stringify({ ...payload, key: "『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』-BYPASS-OK" })
+            body: JSON.stringify({ step: 'login_and_get_cars', user: email, pass: pass, key: 'BYPASS' })
         });
         const text = await res.text();
-        try { return JSON.parse(text); } catch { return { error: "Respon non-JSON: " + text }; }
-    } catch (err) {
-        return { error: "Network Error: " + err.message };
-    }
-}
-
-async function handleLoginAndGetCars() {
-    const email = document.getElementById('tuneEmail').value;
-    const pass = document.getElementById('tunePass').value;
-    if (!email || !pass) { showToast('⚠️ Email & Password wajib diisi!', 'error'); return; }
-
-    showStatus('tuneLoginStatus', '⏳ Menghubungkan & menarik garasi...', 'info');
-    setLoading('loginBtn', true);
-    
-    const res = await apiCall({ step: 'login_and_get_cars', user: email, pass: pass });
-
-    if (res.status === 'success') {
-        currentSessionId = res.session_id || res.sessionId;
+        document.getElementById('responseLog').textContent = text;
         
-        if (!currentSessionId) {
-            showStatus('tuneLoginStatus', '❌ Session ID dari server kosong!', 'error');
-            setLoading('loginBtn', false);
-            return;
-        }
-
-        document.getElementById('sessionIdText').textContent = currentSessionId;
-        document.getElementById('carListCard').classList.remove('hidden');
-        showStatus('tuneLoginStatus', `✅ Login Sukses! Session: ${currentSessionId} | Ditemukan ${(res.cars || []).length} mobil.`, 'success');
-        renderCars(res.cars || []);
-        showToast('✅ Garasi berhasil dimuat!', 'success');
-    } else {
-        showStatus('tuneLoginStatus', `❌ ${res.error || 'Gagal login!'}`, 'error');
-        showToast('❌ Gagal login!', 'error');
+        try {
+            const json = JSON.parse(text);
+            if(json.session_id) {
+                document.getElementById('testSessionId').value = json.session_id;
+            }
+        } catch(e) {}
+    } catch(err) {
+        document.getElementById('responseLog').textContent = 'Error: ' + err.message;
     }
-    setLoading('loginBtn', false);
 }
 
-function renderCars(cars) {
-    const container = document.getElementById('carListContainer');
-    container.innerHTML = '';
-    if (cars.length === 0) { container.innerHTML = '<div class="text-muted">Tidak ada mobil di garasi</div>'; return; }
-
-    cars.forEach(car => {
-        const div = document.createElement('div');
-        div.className = 'car-item';
-        div.innerHTML = car.display;
-        div.onclick = () => {
-            document.querySelectorAll('.car-item').forEach(i => i.classList.remove('selected'));
-            div.classList.add('selected');
-            selectedCarData = car;
-            document.getElementById('selectedCarName').value = `${car.display} (ID: ${car.id})`;
-            document.getElementById('tuningPanelCard').classList.remove('hidden');
-            showToast('🚗 Mobil dipilih!', 'info');
-        };
-        container.appendChild(div);
-    });
-}
-
-// 🦾 FUNGSI UTAMA TOMBOL TERAPKAN TUNING (DIPAKSA MASUK EVENT LISTENER)
-async function handleApplyTune() {
-    console.log("Tombol Terapkan Tuning Ditekan!");
+async function testApi() {
+    const step = document.getElementById('testStep').value;
+    const session_id = document.getElementById('testSessionId').value;
+    let customData = {};
     
-    if (!currentSessionId || !selectedCarData) { 
-        showToast('⚠️ Pilih mobil dulu dari daftar garasi di atas!', 'error'); 
-        return; 
+    try {
+        customData = JSON.parse(document.getElementById('testPayload').value);
+    } catch(e) {
+        alert('Format JSON payload salah/tidak valid!');
+        return;
     }
 
     const payload = {
-        step: 'edit_existing_car',
-        session_id: currentSessionId,
-        car_id_pilihan: selectedCarData.id,
-        unlock_bodykits: document.getElementById('actionUnlockKits').checked,
-        bodi_action: document.getElementById('actionLepasBodi').checked ? 'lepas_bodi' : '',
-        input_mass_engine: document.getElementById('bodyMass').value,
-        body_front_downforce: document.getElementById('aeroFront').value,
-        turbo_boost: document.getElementById('turboBoost').value,
-        rev_limiter: document.getElementById('revLimiter').value,
-        gas_sensitivity: document.getElementById('gasSensitivity').value,
-        brake_sensitivity: document.getElementById('brakeSensitivity').value,
-        front_arm_length: document.getElementById('frontArmLength').value,
-        long_arm_offset: document.getElementById('longArmOffset').value,
-        steering_lock: document.getElementById('steeringLock').value
+        step: step,
+        session_id: session_id,
+        key: 'BYPASS',
+        ...customData
     };
 
-    showStatus('applyStatus', '⏳ Menyinkronkan ultimate tuning ke server game...', 'info');
-    setLoading('applyTuneBtn', true);
-
-    const res = await apiCall(payload);
-
-    if (res.status === 'success') {
-        showStatus('applyStatus', `✅ ${res.message}`, 'success');
-        showToast('🎉 Ultimate tuning sukses diterapkan!', 'success');
-    } else {
-        showStatus('applyStatus', `❌ ${res.error || 'Gagal sinkronisasi'}`, 'error');
-        showToast('❌ Gagal menerapkan tuning!', 'error');
+    document.getElementById('responseLog').textContent = '⏳ Mengirim payload tuning...';
+    try {
+        const res = await fetch(GATEWAY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth' },
+            body: JSON.stringify(payload)
+        });
+        const text = await res.text();
+        document.getElementById('responseLog').textContent = text;
+    } catch(err) {
+        document.getElementById('responseLog').textContent = 'Error: ' + err.message;
     }
-    setLoading('applyTuneBtn', false);
 }
-
-async function handleRegister() {
-    const email = document.getElementById('regEmail').value;
-    const password = document.getElementById('regPassword').value;
-    const silver = document.getElementById('regSilver').value;
-    const gold = document.getElementById('regGold').value;
-    const exp = document.getElementById('regExp').value;
-
-    if (!email || !password) { showToast('⚠️ Email & Password wajib diisi!', 'error'); return; }
-
-    showStatus('regStatus', '⏳ Proses auto register & injeksi data vault sultan...', 'info');
-    setLoading('regBtn', true);
-
-    const res = await apiCall({
-        step: 'register_overwrite',
-        email: email,
-        pass: password,
-        silver: Number(silver),
-        gold: Number(gold),
-        exp: Number(exp)
-    });
-
-    if (res.status === 'success') {
-        showStatus('regStatus', `✅ ${res.message}`, 'success');
-        showToast('🎉 Akun baru sultan berhasil dibuat!', 'success');
-        document.getElementById('tuneEmail').value = email;
-        document.getElementById('tunePass').value = password;
-    } else {
-        showStatus('regStatus', `❌ ${res.error || 'Gagal register!'}`, 'error');
-        showToast('❌ Register gagal!', 'error');
-    }
-    setLoading('regBtn', false);
-}
-
-// 🛡️ PASANG EVENT LISTENER JALUR AMAN SUPAYA TOMBOL PASTI MERESPON
-document.addEventListener('DOMContentLoaded', () => {
-    const loginBtn = document.getElementById('loginBtn');
-    if (loginBtn) loginBtn.addEventListener('click', handleLoginAndGetCars);
-
-    const applyBtn = document.getElementById('applyTuneBtn');
-    if (applyBtn) applyBtn.addEventListener('click', handleApplyTune);
-
-    const regBtn = document.getElementById('regBtn');
-    if (regBtn) regBtn.addEventListener('click', handleRegister);
-});
 </script>
 
 </body>
