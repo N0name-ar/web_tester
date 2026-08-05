@@ -210,7 +210,7 @@
 <div id="toast" class="toast"></div>
 
 <script>
-const GATEWAY_URL = 'https://ugfokxuasdpxiscnagmm.supabase.co/functions/v1/code_clone'; // Ganti dengan URL Gateway lu
+const GATEWAY_URL = 'https://bdehqzvzmtpvamcbyfmx.supabase.co/functions/v1/dasbor_tuning';
 
 let currentSessionId = null;
 let selectedCarData = null;
@@ -322,17 +322,11 @@ async function handleApplyTune() {
     if (!currentSessionId || !selectedCarData) { showToast('⚠️ Pilih mobil dulu!', 'error'); return; }
 
     const payload = {
-        step: 'tune_existing_car',
+        step: 'edit_existing_car',
         session_id: currentSessionId,
-        car_id: selectedCarData.id,
-        body_mass: document.getElementById('bodyMass').value,
-        body_front_downforce: document.getElementById('aeroFront').value,
-        body_rear_downforce: document.getElementById('aeroRear').value,
-        bodi_action: document.getElementById('actionLepasBodi').checked ? 'lepas_bodi' : '',
-        engine_turbo_pressure: document.getElementById('engineTurbo').value,
-        swap_engine: document.getElementById('swapEngine').value,
-        wheel_front_tyre_pressure: document.getElementById('tyreFront').value,
-        wheel_rear_tyre_pressure: document.getElementById('tyreRear').value
+        car_id_pilihan: selectedCarData.id,
+        input_mass_engine: document.getElementById('bodyMass').value,
+        input_air_res: document.getElementById('aeroFront').value
     };
 
     showStatus('applyStatus', '⏳ Menyinkronkan tuning ke server game...', 'info');
@@ -403,16 +397,7 @@ async function handleUnban() {
 }
 
 async function handleCloneAccount() {
-    const payload = {
-        step: 'noname',
-        target_email: document.getElementById('clTargetEmail').value,
-        target_pass: document.getElementById('clTargetPass').value,
-        new_email: document.getElementById('clNewEmail').value,
-        new_pass: document.getElementById('clNewPass').value
-    };
-    const res = await apiCall(payload);
-    if (res.status === 'success') { showStatus('clStatus', `✅ ${res.message}`, 'success'); showToast('👑 Kloning sukses!', 'success'); }
-    else { showStatus('clStatus', `❌ ${res.error}`, 'error'); showToast('❌ Kloning gagal!', 'error'); }
+    showToast('ℹ️ Fitur kloning menggunakan endpoint terpisah.', 'info');
 }
 </script>
 
