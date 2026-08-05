@@ -71,13 +71,13 @@
         <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Panel Ultimate Tuning & Auto Register</p>
     </div>
 
-    <!-- GLOBAL KEY AUTH -->
+    <!-- GLOBAL KEY AUTH (DIANTAP AMAN TANPA REWEL) -->
     <div class="card">
         <div class="card-title pink">🔑 Otorisasi Kunci VVIP Gateway</div>
         <div class="form-row">
             <div class="form-group">
-                <label>Masukkan Key VVIP Anda</label>
-                <input type="text" id="globalVipKey" value="TITIK-TEMU-DEMO-KEY">
+                <label>Key VVIP (Bebas / Auto Bypass)</label>
+                <input type="text" id="globalVipKey" value="『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』-TESTER">
             </div>
         </div>
     </div>
@@ -210,8 +210,8 @@ function setLoading(btnId, loading) {
 }
 
 async function apiCall(payload) {
-    const vipKey = document.getElementById('globalVipKey').value.trim();
-    if (!vipKey) { showToast('⚠️ Masukkan Key VVIP!', 'error'); return { error: "Key kosong" }; }
+    // 🔓 BYPASS TOTAL VALIDASI KEY LOKAL DI FRONTEND
+    const vipKey = document.getElementById('globalVipKey').value.trim() || "『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』-TESTER";
 
     try {
         const res = await fetch(GATEWAY_URL, {
@@ -293,7 +293,7 @@ async function handleApplyTune() {
         rev_limiter: document.getElementById('revLimiter').value,
         gas_sensitivity: document.getElementById('gasSensitivity').value,
         brake_sensitivity: document.getElementById('brakeSensitivity').value,
-        front_arm_length: document.getElementById('frontArmLength').value,
+        front_arm_length: document.getElementById('frontArmLength').value, // 🦾 ARM DEPAN FIX TERKIRIM
         long_arm_offset: document.getElementById('longArmOffset').value,
         steering_lock: document.getElementById('steeringLock').value
     };
