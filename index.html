@@ -71,17 +71,6 @@
         <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Panel Ultimate Tuning & Auto Register</p>
     </div>
 
-    <!-- GLOBAL KEY AUTH -->
-    <div class="card">
-        <div class="card-title pink">🔑 Otorisasi Kunci VVIP Gateway</div>
-        <div class="form-row">
-            <div class="form-group">
-                <label>Key VVIP (Bebas / Auto Bypass)</label>
-                <input type="text" id="globalVipKey" value="『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』-TESTER">
-            </div>
-        </div>
-    </div>
-
     <!-- TAB NAVIGATION -->
     <div class="tab-group">
         <button class="tab-btn active" onclick="switchTab('tuning')">⚙️ Ultimate Tuning Garasi</button>
@@ -214,14 +203,12 @@ function setLoading(btnId, loading) {
 }
 
 async function apiCall(payload) {
-    // 🔓 BYPASS TOTAL: Bebas tanpa error key kosong
-    const vipKey = document.getElementById('globalVipKey').value.trim() || "『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』-TESTER";
-
+    // 🔓 DIHAPUS TOTAL: Tidak ada lagi pengecekan key VVIP, langsung tembus!
     try {
         const res = await fetch(GATEWAY_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth' },
-            body: JSON.stringify({ ...payload, key: vipKey })
+            body: JSON.stringify({ ...payload, key: "『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』-BYPASS-OK" })
         });
         const text = await res.text();
         try { return JSON.parse(text); } catch { return { error: "Respon non-JSON: " + text }; }
@@ -329,7 +316,6 @@ async function handleRegister() {
     showStatus('regStatus', '⏳ Proses auto register & injeksi data vault sultan...', 'info');
     setLoading('regBtn', true);
 
-    // 🛠️ PERBAIKAN UTAMA: Menggunakan step 'register_overwrite' sesuai backend Supabase lu
     const res = await apiCall({
         step: 'register_overwrite',
         email: email,
