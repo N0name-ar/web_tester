@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏎️ CarX VVIP Master Control & Tuning</title>
+    <title>🏎️ CarX VVIP Master Control & Ultimate Tuning</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -68,7 +68,7 @@
 <div class="container">
     <div class="header">
         <h1>🏎️ CarX VVIP Master Control</h1>
-        <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Panel Ultimate Tuning & Auto Register Temp Mail</p>
+        <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Panel Ultimate Tuning & Auto Register</p>
     </div>
 
     <!-- GLOBAL KEY AUTH -->
@@ -86,9 +86,6 @@
     <div class="tab-group">
         <button class="tab-btn active" onclick="switchTab('tuning')">⚙️ Ultimate Tuning Garasi</button>
         <button class="tab-btn" onclick="switchTab('register')">🆕 Auto Register</button>
-        <button class="tab-btn" onclick="switchTab('backup')">💾 Cloud Backup</button>
-        <button class="tab-btn" onclick="switchTab('unban')">☣️ Unban / Self-Healing</button>
-        <button class="tab-btn" onclick="switchTab('clone')">👑 Kloning Akun</button>
     </div>
 
     <!-- TAB 1: ULTIMATE TUNING GARASI -->
@@ -126,35 +123,29 @@
                 </div>
             </div>
 
-            <!-- Bodi & Downforce -->
-            <div class="tune-section" style="border-left-color:#f5576c;">
-                <div class="label pink">Menu Bodi & Downforce</div>
-                <div class="form-row">
-                    <div class="form-group"><label>Berat Massa</label><input type="number" id="bodyMass" value="1200"></div>
-                    <div class="form-group"><label>Aero Depan</label><input type="number" id="aeroFront" value="-0.2" step="0.1"></div>
-                    <div class="form-group"><label>Aero Belakang</label><input type="number" id="aeroRear" value="1.5" step="0.1"></div>
-                </div>
-            </div>
-
-            <!-- Mesin & Turbo -->
+            <!-- Mesin, Turbo, RPM, & Sensor Gas -->
             <div class="tune-section" style="border-left-color:#00c853;">
-                <div class="label green">Menu Mesin, Turbo & RPM</div>
+                <div class="label green">Menu Mesin, Turbo, RPM & Sensor Gas</div>
                 <div class="form-row">
                     <div class="form-group"><label>Turbo Boost Pressure</label><input type="number" id="turboBoost" value="3.5" step="0.1"></div>
                     <div class="form-group"><label>Rev Limiter (RPM)</label><input type="number" id="revLimiter" value="9500"></div>
                 </div>
+                <div class="form-row mt-10">
+                    <div class="form-group"><label>Sensor Gas (Respons Pedal)</label><input type="number" id="gasSensitivity" value="2.0" step="0.1"></div>
+                    <div class="form-group"><label>Berat Massa Mesin</label><input type="number" id="bodyMass" value="1200"></div>
+                </div>
             </div>
 
-            <!-- Kaki-Kaki, Long Arm & Ban -->
+            <!-- Kaki-Kaki, Dual Arm, Long Arm, & Sensor Rem -->
             <div class="tune-section" style="border-left-color:#f6d365;">
-                <div class="label gold">Menu Kaki-Kaki, Long Arm (Swing Arm) & Ban</div>
+                <div class="label gold">Menu Kaki-Kaki, Dual Arm (Long Arm Anti-Ciut) & Sensor Rem</div>
                 <div class="form-row">
-                    <div class="form-group"><label>Long Arm / Sasis Belakang (Offset)</label><input type="number" id="longArmOffset" value="0.8" step="0.1"></div>
+                    <div class="form-group"><label>Long Arm Belakang (Offset Sasis)</label><input type="number" id="longArmOffset" value="1.2" step="0.1"></div>
                     <div class="form-group"><label>Steering Lock (Sudut Drift)</label><input type="number" id="steeringLock" value="70"></div>
                 </div>
                 <div class="form-row mt-10">
-                    <div class="form-group"><label>Tekanan Ban Depan</label><input type="number" id="tyreFront" value="1.5" step="0.1"></div>
-                    <div class="form-group"><label>Tekanan Ban Belakang</label><input type="number" id="tyreRear" value="1.5" step="0.1"></div>
+                    <div class="form-group"><label>Sensor Rem (Pakem Pedal)</label><input type="number" id="brakeSensitivity" value="2.0" step="0.1"></div>
+                    <div class="form-group"><label>Aero Depan / Belakang</label><input type="number" id="aeroFront" value="-0.2" step="0.1"></div>
                 </div>
             </div>
 
@@ -173,42 +164,6 @@
         </div>
         <button class="btn btn-warning btn-block" id="regBtn" onclick="handleRegister()">🚀 Proses Auto Register & Injeksi</button>
         <div id="regStatus" class="hidden status-box"></div>
-    </div>
-
-    <!-- TAB 3: CLOUD BACKUP -->
-    <div class="card hidden" id="section-backup">
-        <div class="card-title pink">💾 Cadangkan Progres Akun ke Cloud VVIP</div>
-        <div class="form-row">
-            <div class="form-group"><label>Email</label><input type="email" id="bkEmail" placeholder="email@gmail.com"></div>
-            <div class="form-group"><label>Password</label><input type="password" id="bkPass" placeholder="Password"></div>
-        </div>
-        <button class="btn btn-primary btn-block" onclick="handleCloudBackup()">🚀 Upload Backup ke Cloud</button>
-        <div id="bkStatus" class="hidden status-box"></div>
-    </div>
-
-    <!-- TAB 4: UNBAN / SELF-HEALING -->
-    <div class="card hidden" id="section-unban">
-        <div class="card-title gold">☣️ Pemulihan Akun Terkena Banned (Self-Healing)</div>
-        <div class="form-row">
-            <div class="form-group"><label>Email Akun Terbanned</label><input type="email" id="ubEmail" placeholder="email@gmail.com"></div>
-        </div>
-        <button class="btn btn-warning btn-block" onclick="handleUnban()">🚀 Jalankan Auto Self-Healing</button>
-        <div id="ubStatus" class="hidden status-box"></div>
-    </div>
-
-    <!-- TAB 5: CLONE AKUN -->
-    <div class="card hidden" id="section-clone">
-        <div class="card-title blue">👑 Kloning Akun Sultan Langsung</div>
-        <div class="form-row">
-            <div class="form-group"><label>Email Target (Sultan)</label><input type="email" id="clTargetEmail" placeholder="sultan@gmail.com"></div>
-            <div class="form-group"><label>Password Target</label><input type="password" id="clTargetPass" placeholder="Pass Sultan"></div>
-        </div>
-        <div class="form-row">
-            <div class="form-group"><label>Email Akun Baru</label><input type="email" id="clNewEmail" placeholder="baru@gmail.com"></div>
-            <div class="form-group"><label>Password Akun Baru</label><input type="password" id="clNewPass" placeholder="Pass Baru"></div>
-        </div>
-        <button class="btn btn-primary btn-block" onclick="handleCloneAccount()">🚀 Proses Kloning Instan</button>
-        <div id="clStatus" class="hidden status-box"></div>
     </div>
 </div>
 
@@ -233,11 +188,11 @@ function showStatus(id, msg, type = 'info') {
 }
 
 function switchTab(tabName) {
-    ['tuning', 'register', 'backup', 'unban', 'clone'].forEach(t => {
+    ['tuning', 'register'].forEach(t => {
         document.getElementById(`section-${t}`).classList.toggle('hidden', t !== tabName);
     });
     document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-        const tabs = ['tuning', 'register', 'backup', 'unban', 'clone'];
+        const tabs = ['tuning', 'register'];
         btn.classList.toggle('active', tabs[idx] === tabName);
     });
 }
@@ -326,7 +281,6 @@ function renderCars(cars) {
 async function handleApplyTune() {
     if (!currentSessionId || !selectedCarData) { showToast('⚠️ Pilih mobil dulu!', 'error'); return; }
 
-    // 🎯 MENGIRIM SEMUA PARAMETER ULTIMATE TUNING KE BACKEND
     const payload = {
         step: 'edit_existing_car',
         session_id: currentSessionId,
@@ -335,13 +289,12 @@ async function handleApplyTune() {
         bodi_action: document.getElementById('actionLepasBodi').checked ? 'lepas_bodi' : '',
         input_mass_engine: document.getElementById('bodyMass').value,
         body_front_downforce: document.getElementById('aeroFront').value,
-        body_rear_downforce: document.getElementById('aeroRear').value,
         turbo_boost: document.getElementById('turboBoost').value,
         rev_limiter: document.getElementById('revLimiter').value,
+        gas_sensitivity: document.getElementById('gasSensitivity').value,
+        brake_sensitivity: document.getElementById('brakeSensitivity').value,
         long_arm_offset: document.getElementById('longArmOffset').value,
-        steering_lock: document.getElementById('steeringLock').value,
-        wheel_front_tyre_pressure: document.getElementById('tyreFront').value,
-        wheel_rear_tyre_pressure: document.getElementById('tyreRear').value
+        steering_lock: document.getElementById('steeringLock').value
     };
 
     showStatus('applyStatus', '⏳ Menyinkronkan ultimate tuning ke server game...', 'info');
@@ -366,7 +319,7 @@ async function handleRegister() {
 
     if (!password) { showToast('⚠️ Password wajib diisi!', 'error'); return; }
 
-    showStatus('regStatus', '⏳ Auto generate email temp, polling OTP, & inject sultan (±10 detik)...', 'info');
+    showStatus('regStatus', '⏳ Auto generate email temp, polling OTP, & inject sultan...', 'info');
     setLoading('regBtn', true);
 
     const res = await apiCall({
@@ -378,41 +331,17 @@ async function handleRegister() {
 
     if (res.status === true || res.status === 'success') {
         const acc = res.data || {};
-        showStatus('regStatus', `
-✅ AUTO REGISTER & INJEKSI SUKSES!
-📧 Email: ${acc.email || 'Otomatis'}
-🔑 Password: ${acc.password || password}
-👤 Nick: ${acc.carx_id || 'Sultan'}
-
-💡 Email & password otomatis tersalin ke menu Login Tuning!
-        `, 'success');
+        showStatus('regStatus', `✅ AUTO REGISTER & INJEKSI SUKSES!\n📧 Email: ${acc.email || 'Otomatis'}\n🔑 Password: ${password}`, 'success');
         showToast('🎉 Akun baru sultan berhasil dibuat!', 'success');
-
         if (acc.email) {
             document.getElementById('tuneEmail').value = acc.email;
-            document.getElementById('tunePass').value = acc.password || password;
+            document.getElementById('tunePass').value = password;
         }
     } else {
         showStatus('regStatus', `❌ ${res.message || res.error || 'Gagal register!'}`, 'error');
         showToast('❌ Register gagal!', 'error');
     }
     setLoading('regBtn', false);
-}
-
-async function handleCloudBackup() {
-    const res = await apiCall({ step: 'cloud_backup', user: document.getElementById('bkEmail').value, pass: document.getElementById('bkPass').value });
-    if (res.status === 'success') { showStatus('bkStatus', `✅ ${res.message}`, 'success'); showToast('🎉 Backup sukses!', 'success'); }
-    else { showStatus('bkStatus', `❌ ${res.error}`, 'error'); showToast('❌ Backup gagal!', 'error'); }
-}
-
-async function handleUnban() {
-    const res = await apiCall({ step: 'auto_self_healing', user: document.getElementById('ubEmail').value });
-    if (res.status === 'success') { showStatus('ubStatus', `✅ ${res.message}`, 'success'); showToast('🎉 Unban sukses!', 'success'); }
-    else { showStatus('ubStatus', `❌ ${res.error}`, 'error'); showToast('❌ Unban gagal!', 'error'); }
-}
-
-async function handleCloneAccount() {
-    showToast('ℹ️ Fitur kloning menggunakan endpoint terpisah.', 'info');
 }
 </script>
 
