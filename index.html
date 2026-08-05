@@ -124,7 +124,7 @@
                     <div class="form-group"><label>Aero Belakang</label><input type="number" id="aeroRear" value="1.5" step="0.1"></div>
                 </div>
                 <div style="margin-top:8px;">
-                    <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="actionLepasBodi"> 🛠️ Lepas Bodi (Bonnet, Bumper, Dll)</label>
+                    <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="actionLepasBodi"> 🛠️ Lepas Bodi (Bonnet, Bumper, Dll / Trodol)</label>
                 </div>
             </div>
 
@@ -321,12 +321,17 @@ function renderCars(cars) {
 async function handleApplyTune() {
     if (!currentSessionId || !selectedCarData) { showToast('⚠️ Pilih mobil dulu!', 'error'); return; }
 
+    // 🎯 PAYLOAD LENGKAP YANG DIKIRIM KE BACKEND (MENCAKUP AERO, BAN, & TRODOL BODI)
     const payload = {
         step: 'edit_existing_car',
         session_id: currentSessionId,
         car_id_pilihan: selectedCarData.id,
         input_mass_engine: document.getElementById('bodyMass').value,
-        input_air_res: document.getElementById('aeroFront').value
+        body_front_downforce: document.getElementById('aeroFront').value,
+        body_rear_downforce: document.getElementById('aeroRear').value,
+        wheel_front_tyre_pressure: document.getElementById('tyreFront').value,
+        wheel_rear_tyre_pressure: document.getElementById('tyreRear').value,
+        bodi_action: document.getElementById('actionLepasBodi').checked ? 'lepas_bodi' : ''
     };
 
     showStatus('applyStatus', '⏳ Menyinkronkan tuning ke server game...', 'info');
