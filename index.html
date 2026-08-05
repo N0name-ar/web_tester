@@ -71,7 +71,7 @@
         <p>『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』- Panel Ultimate Tuning & Auto Register</p>
     </div>
 
-    <!-- GLOBAL KEY AUTH (DIANTAP AMAN TANPA REWEL) -->
+    <!-- GLOBAL KEY AUTH -->
     <div class="card">
         <div class="card-title pink">🔑 Otorisasi Kunci VVIP Gateway</div>
         <div class="form-row">
@@ -156,13 +156,17 @@
 
     <!-- TAB 2: AUTO REGISTER (TEMP MAIL) -->
     <div class="card hidden" id="section-register">
-        <div class="card-title gold">🆕 Auto Register Akun Baru (Temp Mail + Injeksi Sultan)</div>
+        <div class="card-title gold">🆕 Auto Register Akun Baru (Injeksi Vault Sultan)</div>
         <div class="form-row">
-            <div class="form-group"><label>Password Baru Akun</label><input type="password" id="regPassword" placeholder="Password" value="Rahasia123"></div>
+            <div class="form-group"><label>📧 Email Akun Baru</label><input type="email" id="regEmail" placeholder="sultan@gmail.com"></div>
+            <div class="form-group"><label>🔑 Password Akun Baru</label><input type="password" id="regPassword" placeholder="Password" value="Rahasia123"></div>
+        </div>
+        <div class="form-row mt-10">
             <div class="form-group"><label>Silver</label><input type="number" id="regSilver" value="9999999"></div>
             <div class="form-group"><label>Gold</label><input type="number" id="regGold" value="999999"></div>
+            <div class="form-group"><label>EXP</label><input type="number" id="regExp" value="500000"></div>
         </div>
-        <button class="btn btn-warning btn-block" id="regBtn" onclick="handleRegister()">🚀 Proses Auto Register & Injeksi</button>
+        <button class="btn btn-warning btn-block" id="regBtn" onclick="handleRegister()">🚀 Proses Auto Register & Injeksi Sultan</button>
         <div id="regStatus" class="hidden status-box"></div>
     </div>
 </div>
@@ -210,7 +214,7 @@ function setLoading(btnId, loading) {
 }
 
 async function apiCall(payload) {
-    // 🔓 BYPASS TOTAL VALIDASI KEY LOKAL DI FRONTEND
+    // 🔓 BYPASS TOTAL: Bebas tanpa error key kosong
     const vipKey = document.getElementById('globalVipKey').value.trim() || "『𝑻𝑰𝑻𝑰𝑲 ☯ 𝑻𝑬𝑴𝑼』-TESTER";
 
     try {
@@ -293,7 +297,7 @@ async function handleApplyTune() {
         rev_limiter: document.getElementById('revLimiter').value,
         gas_sensitivity: document.getElementById('gasSensitivity').value,
         brake_sensitivity: document.getElementById('brakeSensitivity').value,
-        front_arm_length: document.getElementById('frontArmLength').value, // 🦾 ARM DEPAN FIX TERKIRIM
+        front_arm_length: document.getElementById('frontArmLength').value,
         long_arm_offset: document.getElementById('longArmOffset').value,
         steering_lock: document.getElementById('steeringLock').value
     };
@@ -314,32 +318,34 @@ async function handleApplyTune() {
 }
 
 async function handleRegister() {
+    const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
     const silver = document.getElementById('regSilver').value;
     const gold = document.getElementById('regGold').value;
+    const exp = document.getElementById('regExp').value;
 
-    if (!password) { showToast('⚠️ Password wajib diisi!', 'error'); return; }
+    if (!email || !password) { showToast('⚠️ Email & Password wajib diisi!', 'error'); return; }
 
-    showStatus('regStatus', '⏳ Auto generate email temp, polling OTP, & inject sultan...', 'info');
+    showStatus('regStatus', '⏳ Proses auto register & injeksi data vault sultan...', 'info');
     setLoading('regBtn', true);
 
+    // 🛠️ PERBAIKAN UTAMA: Menggunakan step 'register_overwrite' sesuai backend Supabase lu
     const res = await apiCall({
-        step: 'register',
-        password: password,
+        step: 'register_overwrite',
+        email: email,
+        pass: password,
         silver: Number(silver),
-        gold: Number(gold)
+        gold: Number(gold),
+        exp: Number(exp)
     });
 
-    if (res.status === true || res.status === 'success') {
-        const acc = res.data || {};
-        showStatus('regStatus', `✅ AUTO REGISTER & INJEKSI SUKSES!\n📧 Email: ${acc.email || 'Otomatis'}\n🔑 Password: ${password}`, 'success');
+    if (res.status === 'success') {
+        showStatus('regStatus', `✅ ${res.message}`, 'success');
         showToast('🎉 Akun baru sultan berhasil dibuat!', 'success');
-        if (acc.email) {
-            document.getElementById('tuneEmail').value = acc.email;
-            document.getElementById('tunePass').value = password;
-        }
+        document.getElementById('tuneEmail').value = email;
+        document.getElementById('tunePass').value = password;
     } else {
-        showStatus('regStatus', `❌ ${res.message || res.error || 'Gagal register!'}`, 'error');
+        showStatus('regStatus', `❌ ${res.error || 'Gagal register!'}`, 'error');
         showToast('❌ Register gagal!', 'error');
     }
     setLoading('regBtn', false);
