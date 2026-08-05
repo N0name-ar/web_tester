@@ -321,7 +321,6 @@ function renderCars(cars) {
 async function handleApplyTune() {
     if (!currentSessionId || !selectedCarData) { showToast('⚠️ Pilih mobil dulu!', 'error'); return; }
 
-    // 🎯 PAYLOAD LENGKAP YANG DIKIRIM KE BACKEND (MENCAKUP AERO, BAN, & TRODOL BODI)
     const payload = {
         step: 'edit_existing_car',
         session_id: currentSessionId,
