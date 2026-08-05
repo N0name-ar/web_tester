@@ -116,7 +116,7 @@
             <div class="tune-section">
                 <div class="label pink">Menu Body Kit & Trondol Sisa Tulangan</div>
                 <div class="form-row" style="margin-top:8px;">
-                    <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="actionUnlockKits"> 🔓 Unlock Semua Body Kit Langka</label>
+                    <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="actionUnlockKits"> 🔓 Unlock Semua Body Kit (Auto-Detect Mobil)</label>
                 </div>
                 <div style="margin-top:8px;">
                     <label style="font-size:12px;cursor:pointer;"><input type="checkbox" id="actionLepasBodi"> 🛠️ Trondol Bodi Luar (Sisakan Sasis, Tulangan & Interior)</label>
@@ -136,16 +136,16 @@
                 </div>
             </div>
 
-            <!-- Kaki-Kaki, Dual Arm, Long Arm, & Sensor Rem -->
+            <!-- Kaki-Kaki, Dual Arm Lengkap, & Sensor Rem -->
             <div class="tune-section" style="border-left-color:#f6d365;">
-                <div class="label gold">Menu Kaki-Kaki, Dual Arm (Long Arm Anti-Ciut) & Sensor Rem</div>
+                <div class="label gold">Menu Kaki-Kaki, Dual Arm (Depan & Belakang) & Sensor Rem</div>
                 <div class="form-row">
+                    <div class="form-group"><label>Long Arm Depan (Panjang Arm)</label><input type="number" id="frontArmLength" value="1.0" step="0.1"></div>
                     <div class="form-group"><label>Long Arm Belakang (Offset Sasis)</label><input type="number" id="longArmOffset" value="1.2" step="0.1"></div>
-                    <div class="form-group"><label>Steering Lock (Sudut Drift)</label><input type="number" id="steeringLock" value="70"></div>
                 </div>
                 <div class="form-row mt-10">
+                    <div class="form-group"><label>Steering Lock (Sudut Drift)</label><input type="number" id="steeringLock" value="70"></div>
                     <div class="form-group"><label>Sensor Rem (Pakem Pedal)</label><input type="number" id="brakeSensitivity" value="2.0" step="0.1"></div>
-                    <div class="form-group"><label>Aero Depan / Belakang</label><input type="number" id="aeroFront" value="-0.2" step="0.1"></div>
                 </div>
             </div>
 
@@ -217,7 +217,7 @@ async function apiCall(payload) {
         const res = await fetch(GATEWAY_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Copyright-Check': 'titik-temu-cloud-secured-v25-key-auth' },
-            body: JSON.stringify({ ...payload, vip_key: vipKey })
+            body: JSON.stringify({ ...payload, key: vipKey })
         });
         const text = await res.text();
         try { return JSON.parse(text); } catch { return { error: "Respon non-JSON: " + text }; }
@@ -293,6 +293,7 @@ async function handleApplyTune() {
         rev_limiter: document.getElementById('revLimiter').value,
         gas_sensitivity: document.getElementById('gasSensitivity').value,
         brake_sensitivity: document.getElementById('brakeSensitivity').value,
+        front_arm_length: document.getElementById('frontArmLength').value,
         long_arm_offset: document.getElementById('longArmOffset').value,
         steering_lock: document.getElementById('steeringLock').value
     };
